@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,60 +11,135 @@
       box-sizing: border-box;
     }
 
+    /* ── Theme variables ── */
+    :root[data-theme="dark"] {
+      --bg: #111;
+      --sidebar-bg: #0a0a0a;
+      --sidebar-border: #1a1a1a;
+      --text: #e0e0e0;
+      --text-muted: #999;
+      --text-heading: #d1d1d1;
+      --logo-color: #fff;
+      --hover-bg: #1a1a1a;
+      --input-bg: #1a1a1a;
+      --input-border: #2a2a2a;
+      --input-focus-border: #444;
+      --input-placeholder: #555;
+      --send-bg: #fff;
+      --send-fill: #111;
+      --settings-card-bg: #1a1a1a;
+      --settings-card-border: #2a2a2a;
+      --toggle-bg: #2a2a2a;
+      --toggle-knob: #fff;
+    }
+
+    :root[data-theme="light"] {
+      --bg: #f5f5f5;
+      --sidebar-bg: #fff;
+      --sidebar-border: #e5e5e5;
+      --text: #1a1a1a;
+      --text-muted: #666;
+      --text-heading: #222;
+      --logo-color: #111;
+      --hover-bg: #f0f0f0;
+      --input-bg: #fff;
+      --input-border: #ddd;
+      --input-focus-border: #aaa;
+      --input-placeholder: #aaa;
+      --send-bg: #111;
+      --send-fill: #fff;
+      --settings-card-bg: #fff;
+      --settings-card-border: #e5e5e5;
+      --toggle-bg: #ddd;
+      --toggle-knob: #fff;
+    }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       display: flex;
       min-height: 100vh;
-      background: #111;
-      color: #e0e0e0;
+      background: var(--bg);
+      color: var(--text);
+      transition: background 0.3s, color 0.3s;
     }
 
     /* ── Sidebar ── */
     .sidebar {
       width: 260px;
-      background: #0a0a0a;
+      background: var(--sidebar-bg);
       padding: 1.25rem 0.75rem;
       display: flex;
       flex-direction: column;
       flex-shrink: 0;
-      border-right: 1px solid #1a1a1a;
+      border-right: 1px solid var(--sidebar-border);
+      transition: background 0.3s, border-color 0.3s;
     }
 
     .sidebar .logo {
       font-size: 1rem;
       font-weight: 600;
-      color: #fff;
+      color: var(--logo-color);
       padding: 0.5rem 0.75rem;
       margin-bottom: 1.5rem;
       letter-spacing: 0.02em;
+      transition: color 0.3s;
     }
 
     .sidebar nav a {
-      display: block;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
       padding: 0.55rem 0.75rem;
       margin-bottom: 2px;
       border-radius: 8px;
-      color: #999;
+      color: var(--text-muted);
       text-decoration: none;
       font-size: 0.875rem;
       transition: background 0.15s, color 0.15s;
+      cursor: pointer;
+    }
+
+    .sidebar nav a.active {
+      background: var(--hover-bg);
+      color: var(--text);
     }
 
     .sidebar nav a:hover {
-      background: #1a1a1a;
-      color: #e0e0e0;
+      background: var(--hover-bg);
+      color: var(--text);
     }
 
-    /* ── Main content area ── */
-    .content {
+    .sidebar nav a svg {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.8;
+      flex-shrink: 0;
+    }
+
+    .sidebar-bottom {
+      margin-top: auto;
+    }
+
+    /* ── Pages ── */
+    .page {
+      display: none;
       flex: 1;
-      background: #111;
+    }
+
+    .page.active {
       display: flex;
+    }
+
+    /* ── Main content area (Chat) ── */
+    .page-chat {
       align-items: center;
       justify-content: center;
+      background: var(--bg);
+      transition: background 0.3s;
     }
 
-    /* ── Prompt box ── */
     .prompt-box {
       width: 100%;
       max-width: 640px;
@@ -75,22 +150,23 @@
       text-align: center;
       font-size: 1.35rem;
       font-weight: 500;
-      color: #d1d1d1;
+      color: var(--text-heading);
       margin-bottom: 1.75rem;
+      transition: color 0.3s;
     }
 
     .prompt-input-wrapper {
       display: flex;
       align-items: center;
-      background: #1a1a1a;
-      border: 1px solid #2a2a2a;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
       border-radius: 14px;
       padding: 0.45rem 0.6rem 0.45rem 1rem;
-      transition: border-color 0.2s;
+      transition: border-color 0.2s, background 0.3s;
     }
 
     .prompt-input-wrapper:focus-within {
-      border-color: #444;
+      border-color: var(--input-focus-border);
     }
 
     .prompt-input-wrapper input {
@@ -100,15 +176,15 @@
       font-size: 0.95rem;
       padding: 0.6rem 0;
       background: transparent;
-      color: #e0e0e0;
+      color: var(--text);
     }
 
     .prompt-input-wrapper input::placeholder {
-      color: #555;
+      color: var(--input-placeholder);
     }
 
     .prompt-input-wrapper button {
-      background: #fff;
+      background: var(--send-bg);
       border: none;
       border-radius: 8px;
       width: 34px;
@@ -118,7 +194,7 @@
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      transition: opacity 0.15s;
+      transition: opacity 0.15s, background 0.3s;
     }
 
     .prompt-input-wrapper button:hover {
@@ -128,7 +204,128 @@
     .prompt-input-wrapper button svg {
       width: 16px;
       height: 16px;
-      fill: #111;
+      fill: var(--send-fill);
+    }
+
+    /* ── Settings page ── */
+    .page-settings {
+      background: var(--bg);
+      padding: 3rem 2.5rem;
+      flex-direction: column;
+      transition: background 0.3s;
+    }
+
+    .page-settings h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 2rem;
+    }
+
+    .setting-card {
+      background: var(--settings-card-bg);
+      border: 1px solid var(--settings-card-border);
+      border-radius: 12px;
+      padding: 1.1rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 500px;
+      transition: background 0.3s, border-color 0.3s;
+    }
+
+    .setting-label {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      font-size: 0.925rem;
+      color: var(--text);
+    }
+
+    .setting-label span {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+
+    /* ── Day/Night toggle switch ── */
+    .theme-toggle {
+      width: 64px;
+      height: 32px;
+      background: var(--toggle-bg);
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      position: relative;
+      transition: background 0.3s;
+      flex-shrink: 0;
+    }
+
+    .theme-toggle .knob {
+      width: 26px;
+      height: 26px;
+      background: var(--toggle-knob);
+      border-radius: 50%;
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    .theme-toggle .knob svg {
+      width: 14px;
+      height: 14px;
+      transition: opacity 0.2s;
+    }
+
+    /* Dark mode: knob on left → moon visible */
+    [data-theme="dark"] .theme-toggle {
+      background: #2a2a2a;
+    }
+
+    [data-theme="dark"] .theme-toggle .knob {
+      transform: translateX(0);
+    }
+
+    [data-theme="dark"] .theme-toggle .icon-sun {
+      display: none;
+    }
+
+    [data-theme="dark"] .theme-toggle .icon-moon {
+      display: block;
+    }
+
+    /* Light mode: knob on right → sun visible */
+    [data-theme="light"] .theme-toggle {
+      background: #87CEEB;
+    }
+
+    [data-theme="light"] .theme-toggle .knob {
+      transform: translateX(32px);
+      background: #FFD93D;
+    }
+
+    [data-theme="light"] .theme-toggle .icon-sun {
+      display: block;
+    }
+
+    [data-theme="light"] .theme-toggle .icon-moon {
+      display: none;
+    }
+
+    .icon-sun {
+      stroke: #f59e0b;
+      fill: none;
+      stroke-width: 2;
+    }
+
+    .icon-moon {
+      stroke: #7c83a8;
+      fill: none;
+      stroke-width: 2;
     }
   </style>
 </head>
@@ -137,13 +334,27 @@
   <aside class="sidebar">
     <div class="logo">MyApp</div>
     <nav>
-      <a href="#">Chats</a>
-      <a href="#">Settings</a>
-      <a href="#">Account</a>
+      <a href="#" data-page="chat" class="active">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Chats
+      </a>
     </nav>
+    <div class="sidebar-bottom">
+      <nav>
+        <a href="#" data-page="settings">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Settings
+        </a>
+        <a href="#" data-page="account">
+          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Account
+        </a>
+      </nav>
+    </div>
   </aside>
 
-  <main class="content">
+  <!-- Chat page -->
+  <main class="page page-chat active" id="page-chat">
     <div class="prompt-box">
       <h1>What can I help you with?</h1>
       <div class="prompt-input-wrapper">
@@ -154,6 +365,55 @@
       </div>
     </div>
   </main>
+
+  <!-- Settings page -->
+  <div class="page page-settings" id="page-settings">
+    <h2>Settings</h2>
+    <div class="setting-card">
+      <div class="setting-label">
+        Appearance
+        <span>Switch between day and night mode</span>
+      </div>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+        <div class="knob">
+          <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Account page (placeholder) -->
+  <div class="page page-settings" id="page-account">
+    <h2>Account</h2>
+  </div>
+
+  <script>
+    // Page navigation
+    const navLinks = document.querySelectorAll('[data-page]');
+    const pages = document.querySelectorAll('.page');
+
+    navLinks.forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const target = link.getAttribute('data-page');
+
+        navLinks.forEach(l => l.classList.remove('active'));
+        link.classList.add('active');
+
+        pages.forEach(p => p.classList.remove('active'));
+        document.getElementById('page-' + target).classList.add('active');
+      });
+    });
+
+    // Theme toggle
+    const toggle = document.getElementById('themeToggle');
+    toggle.addEventListener('click', () => {
+      const html = document.documentElement;
+      const current = html.getAttribute('data-theme');
+      html.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+    });
+  </script>
 
 </body>
 </html>

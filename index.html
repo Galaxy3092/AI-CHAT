@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Website</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      display: flex;
+      min-height: 100vh;
+      background: #111;
+      color: #e0e0e0;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 260px;
+      background: #0a0a0a;
+      padding: 1.25rem 0.75rem;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      border-right: 1px solid #1a1a1a;
+    }
+
+    .sidebar .logo {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #fff;
+      padding: 0.5rem 0.75rem;
+      margin-bottom: 1.5rem;
+      letter-spacing: 0.02em;
+    }
+
+    .sidebar nav a {
+      display: block;
+      padding: 0.55rem 0.75rem;
+      margin-bottom: 2px;
+      border-radius: 8px;
+      color: #999;
+      text-decoration: none;
+      font-size: 0.875rem;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .sidebar nav a:hover {
+      background: #1a1a1a;
+      color: #e0e0e0;
+    }
+
+    /* ── Main content area ── */
+    .content {
+      flex: 1;
+      background: #111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── Prompt box ── */
+    .prompt-box {
+      width: 100%;
+      max-width: 640px;
+      padding: 0 1.5rem;
+    }
+
+    .prompt-box h1 {
+      text-align: center;
+      font-size: 1.35rem;
+      font-weight: 500;
+      color: #d1d1d1;
+      margin-bottom: 1.75rem;
+    }
+
+    .prompt-input-wrapper {
+      display: flex;
+      align-items: center;
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 14px;
+      padding: 0.45rem 0.6rem 0.45rem 1rem;
+      transition: border-color 0.2s;
+    }
+
+    .prompt-input-wrapper:focus-within {
+      border-color: #444;
+    }
+
+    .prompt-input-wrapper input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-size: 0.95rem;
+      padding: 0.6rem 0;
+      background: transparent;
+      color: #e0e0e0;
+    }
+
+    .prompt-input-wrapper input::placeholder {
+      color: #555;
+    }
+
+    .prompt-input-wrapper button {
+      background: #fff;
+      border: none;
+      border-radius: 8px;
+      width: 34px;
+      height: 34px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: opacity 0.15s;
+    }
+
+    .prompt-input-wrapper button:hover {
+      opacity: 0.8;
+    }
+
+    .prompt-input-wrapper button svg {
+      width: 16px;
+      height: 16px;
+      fill: #111;
+    }
+  </style>
+</head>
+<body>
+
+  <aside class="sidebar">
+    <div class="logo">MyApp</div>
+    <nav>
+      <a href="#">Chats</a>
+      <a href="#">Settings</a>
+      <a href="#">Account</a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <div class="prompt-box">
+      <h1>What can I help you with?</h1>
+      <div class="prompt-input-wrapper">
+        <input type="text" placeholder="Ask anything..." />
+        <button type="button" aria-label="Send">
+          <svg viewBox="0 0 24 24"><path d="M3.478 2.405a.75.75 0 0 0-.926.94l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94l18.5-8.25a.75.75 0 0 0 0-1.39l-18.5-8.55Z"/></svg>
+        </button>
+      </div>
+    </div>
+  </main>
+
+</body>
+</html>

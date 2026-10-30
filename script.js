@@ -52,6 +52,8 @@ const suggestionChips = document.querySelectorAll('.suggestion-chip');
 // Sidebar Elements
 const sidebarDot = document.getElementById('sidebarDot');
 const sidebarStatusText = document.getElementById('sidebarStatusText');
+const sidebarChatsList = document.getElementById('sidebarChatsList');
+const sidebarNewBtn = document.getElementById('sidebarNewBtn');
 
 
 // ══════════════════════════════════════
@@ -460,18 +462,20 @@ apiDeleteBtn.addEventListener('click', () => {
 
 // Reset All configurations
 apiClearAllBtn.addEventListener('click', () => {
-  if (!confirm('Clear all stored models and configurations?')) return;
+  if (!confirm('Clear all stored models, saved chats, and configurations?')) return;
   localStorage.clear();
+  activeSessionId = null;
   conversationHistory = [];
   chatMessages.innerHTML = '';
   chatMessages.classList.remove('visible');
   chatWelcome.classList.remove('hidden');
+  renderSidebarHistory();
   liveMetrics = {
     lastLatencyMs: null,
     lastTokens: null,
     details: 'All settings reset. Ready to auto-fetch.'
   };
-  apiStatus.textContent = '✓ All configurations wiped.';
+  apiStatus.textContent = '✓ All configurations and chats wiped.';
   apiStatus.className = 'api-key-status info';
   updateUI();
   autoFetchModels(getCurrentProvider());
@@ -516,10 +520,137 @@ apiTestBtn.addEventListener('click', async () => {
 
 
 // ══════════════════════════════════════
-//  Chat Core Logic
+//  Chat Core Logic & Sessions in Sidebar
 // ══════════════════════════════════════
 
+let activeSessionId = localStorage.getItem('active_chat_id') || null;
 let conversationHistory = [];
+
+function getStoredSessions() {
+  try {
+    const raw = localStorage.getItem('chat_sessions');
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    console.error('Failed to parse chat_sessions:', e);
+    return [];
+  }
+}
+
+function saveStoredSessions(sessions) {
+  try {
+    localStorage.setItem('chat_sessions', JSON.stringify(sessions));
+  } catch (e) {
+    console.error('Failed to save chat_sessions:', e);
+  }
+}
+
+function renderSidebarHistory() {
+  if (!sidebarChatsList) return;
+  const sessions = getStoredSessions();
+  sidebarChatsList.innerHTML = '';
+
+  if (sessions.length === 0) {
+    sidebarChatsList.innerHTML = '<div class="sidebar-no-chats">No saved chats yet</div>';
+    return;
+  }
+
+  sessions.forEach(session => {
+    const item = document.createElement('div');
+    item.className = 'sidebar-chat-item' + (session.id === activeSessionId ? ' active' : '');
+    item.setAttribute('data-id', session.id);
+
+    const safeTitle = escapeHTML(session.title || 'Untitled Chat');
+
+    item.innerHTML = `
+      <span class="sidebar-chat-title" title="${safeTitle}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span>${safeTitle}</span>
+      </span>
+      <button type="button" class="sidebar-chat-delete" title="Delete chat" aria-label="Delete chat">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        </svg>
+      </button>
+    `;
+
+    item.addEventListener('click', (e) => {
+      if (e.target.closest('.sidebar-chat-delete')) return;
+      loadChatSession(session.id);
+    });
+
+    const delBtn = item.querySelector('.sidebar-chat-delete');
+    if (delBtn) {
+      delBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        deleteChatSession(session.id);
+      });
+    }
+
+    sidebarChatsList.appendChild(item);
+  });
+}
+
+function loadChatSession(sessionId) {
+  const sessions = getStoredSessions();
+  const session = sessions.find(s => s.id === sessionId);
+  if (!session) return;
+
+  activeSessionId = sessionId;
+  localStorage.setItem('active_chat_id', sessionId);
+  conversationHistory = session.messages || [];
+
+  navigateTo('chat');
+
+  chatMessages.innerHTML = '';
+  if (conversationHistory.length > 0) {
+    chatWelcome.classList.add('hidden');
+    chatMessages.classList.add('visible');
+    conversationHistory.forEach(msg => {
+      appendMessage(
+        msg.role === 'user' ? 'user' : 'ai',
+        msg.content,
+        msg.provider || 'MyApp',
+        msg.model || ''
+      );
+    });
+    scrollToBottom();
+  } else {
+    chatWelcome.classList.remove('hidden');
+    chatMessages.classList.remove('visible');
+  }
+
+  renderSidebarHistory();
+  chatInput.focus();
+}
+
+function deleteChatSession(sessionId) {
+  let sessions = getStoredSessions();
+  sessions = sessions.filter(s => s.id !== sessionId);
+  saveStoredSessions(sessions);
+
+  if (activeSessionId === sessionId) {
+    startNewChat();
+  } else {
+    renderSidebarHistory();
+  }
+}
+
+function startNewChat() {
+  activeSessionId = null;
+  localStorage.removeItem('active_chat_id');
+  conversationHistory = [];
+
+  chatMessages.innerHTML = '';
+  chatMessages.classList.remove('visible');
+  chatWelcome.classList.remove('hidden');
+  chatInput.value = '';
+  chatInput.style.height = 'auto';
+
+  renderSidebarHistory();
+  navigateTo('chat');
+  chatInput.focus();
+}
 
 chatInput.addEventListener('input', () => {
   chatInput.style.height = 'auto';
@@ -535,6 +666,11 @@ chatInput.addEventListener('keydown', (e) => {
 
 chatSendBtn.addEventListener('click', sendMessage);
 
+if (sidebarNewBtn) {
+  sidebarNewBtn.addEventListener('click', startNewChat);
+}
+chatNewBtn.addEventListener('click', startNewChat);
+
 suggestionChips.forEach(chip => {
   chip.addEventListener('click', () => {
     const prompt = chip.getAttribute('data-prompt');
@@ -544,52 +680,6 @@ suggestionChips.forEach(chip => {
     }
   });
 });
-
-chatNewBtn.addEventListener('click', resetChat);
-
-function saveChatHistory() {
-  try {
-    localStorage.setItem('chat_history', JSON.stringify(conversationHistory));
-  } catch (e) {
-    console.error('Failed to save chat history to localStorage:', e);
-  }
-}
-
-function loadChatHistory() {
-  try {
-    const saved = localStorage.getItem('chat_history');
-    if (!saved) return;
-    const history = JSON.parse(saved);
-    if (Array.isArray(history) && history.length > 0) {
-      conversationHistory = history;
-      chatWelcome.classList.add('hidden');
-      chatMessages.classList.add('visible');
-      chatMessages.innerHTML = '';
-      history.forEach(item => {
-        appendMessage(
-          item.role === 'user' ? 'user' : 'ai',
-          item.content,
-          item.provider || 'MyApp',
-          item.model || ''
-        );
-      });
-      scrollToBottom();
-    }
-  } catch (err) {
-    console.error('Failed to load chat history:', err);
-  }
-}
-
-function resetChat() {
-  conversationHistory = [];
-  localStorage.removeItem('chat_history');
-  chatMessages.innerHTML = '';
-  chatMessages.classList.remove('visible');
-  chatWelcome.classList.remove('hidden');
-  chatInput.value = '';
-  chatInput.style.height = 'auto';
-  chatInput.focus();
-}
 
 function sendMessage() {
   const text = chatInput.value.trim();
@@ -603,16 +693,41 @@ function sendMessage() {
     return;
   }
 
+  // Ensure active session exists or create a new one
+  let sessions = getStoredSessions();
+  let currentSession = sessions.find(s => s.id === activeSessionId);
+
+  if (!currentSession) {
+    const cleanTitle = text.replace(/[\n\r]+/g, ' ').trim();
+    const title = cleanTitle.length > 30 ? cleanTitle.substring(0, 30) + '...' : cleanTitle;
+    currentSession = {
+      id: 'chat-' + Date.now(),
+      title: title || 'New Chat',
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      messages: []
+    };
+    activeSessionId = currentSession.id;
+    localStorage.setItem('active_chat_id', activeSessionId);
+    sessions.unshift(currentSession);
+  }
+
   chatWelcome.classList.add('hidden');
   chatMessages.classList.add('visible');
 
   appendMessage('user', text);
-  conversationHistory.push({
+
+  const userMsg = {
     role: 'user',
     content: text,
     timestamp: Date.now()
-  });
-  saveChatHistory();
+  };
+  conversationHistory.push(userMsg);
+  currentSession.messages.push(userMsg);
+  currentSession.updatedAt = Date.now();
+
+  saveStoredSessions(sessions);
+  renderSidebarHistory();
 
   chatInput.value = '';
   chatInput.style.height = 'auto';
@@ -636,14 +751,23 @@ async function runChatQuery(provider, model) {
 
     typingEl.remove();
     appendMessage('ai', result.reply, provider, model);
-    conversationHistory.push({
+
+    const aiMsg = {
       role: 'assistant',
       content: result.reply,
       provider: provider,
       model: model,
       timestamp: Date.now()
-    });
-    saveChatHistory();
+    };
+    conversationHistory.push(aiMsg);
+
+    const sessions = getStoredSessions();
+    const currentSession = sessions.find(s => s.id === activeSessionId);
+    if (currentSession) {
+      currentSession.messages.push(aiMsg);
+      currentSession.updatedAt = Date.now();
+      saveStoredSessions(sessions);
+    }
 
   } catch (err) {
     typingEl.remove();
@@ -850,6 +974,9 @@ function appendMessage(role, content, providerName = 'MyApp', modelName = '') {
     <div class="message-body">
       <div class="message-header">
         <div class="message-role">${roleLabel}</div>
+      </div>
+      <div class="message-content">${formatted}</div>
+      <div class="message-actions">
         <button type="button" class="btn-copy-msg" title="${copyLabel}" aria-label="${copyLabel}">
           <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
@@ -858,7 +985,6 @@ function appendMessage(role, content, providerName = 'MyApp', modelName = '') {
           <span class="copy-text">Copy</span>
         </button>
       </div>
-      <div class="message-content">${formatted}</div>
     </div>
   `;
 
@@ -906,14 +1032,58 @@ function escapeHTML(str) {
 
 
 // ══════════════════════════════════════
-//  Initial Load & Auto-Fetch Trigger
+//  Initial Load & History Migration
 // ══════════════════════════════════════
+
+function initChatHistory() {
+  let sessions = getStoredSessions();
+
+  // Migrate legacy single chat_history if found
+  const legacyHistory = localStorage.getItem('chat_history');
+  if (sessions.length === 0 && legacyHistory) {
+    try {
+      const parsed = JSON.parse(legacyHistory);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const firstUser = parsed.find(m => m.role === 'user');
+        const rawTitle = firstUser ? firstUser.content.replace(/[\n\r]+/g, ' ').trim() : 'Previous Chat';
+        const title = rawTitle.length > 30 ? rawTitle.substring(0, 30) + '...' : rawTitle;
+        const migrated = {
+          id: 'chat-' + Date.now(),
+          title: title || 'Previous Chat',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          messages: parsed
+        };
+        sessions = [migrated];
+        saveStoredSessions(sessions);
+        activeSessionId = migrated.id;
+        localStorage.setItem('active_chat_id', activeSessionId);
+      }
+    } catch (e) {}
+  }
+
+  renderSidebarHistory();
+
+  if (activeSessionId) {
+    const existing = sessions.find(s => s.id === activeSessionId);
+    if (existing) {
+      loadChatSession(activeSessionId);
+      return;
+    }
+  }
+
+  if (sessions.length > 0) {
+    loadChatSession(sessions[0].id);
+  } else {
+    startNewChat();
+  }
+}
 
 const initProvider = getCurrentProvider();
 updateUI();
 
-// Load saved chat history from localStorage
-loadChatHistory();
+// Initialize sidebar chat history and load active session
+initChatHistory();
 
 // Check if cached models exist, otherwise auto-fetch immediately
 const cached = localStorage.getItem('fetched_models_' + initProvider);

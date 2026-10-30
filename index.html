@@ -24,6 +24,20 @@
       </a>
     </nav>
 
+    <button type="button" class="sidebar-new-btn" id="sidebarNewBtn" title="Start a fresh chat">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 5v14M5 12h14"/>
+      </svg>
+      <span>New Chat</span>
+    </button>
+
+    <div class="sidebar-history-container">
+      <div class="sidebar-section-title">Saved Chats</div>
+      <div class="sidebar-chats-list" id="sidebarChatsList">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
     <div class="sidebar-bottom">
       <!-- Mini status in sidebar footer -->
       <div class="sidebar-status" id="sidebarStatus" title="Active Model">

@@ -47,15 +47,22 @@
   <!-- Chat Page -->
   <main class="page page-chat active" id="page-chat">
 
-    <!-- Chat Header Top Bar -->
+    <!-- Chat Header Top Bar with Model Selection Menu -->
     <header class="chat-header">
       <div class="chat-header-left">
-        <!-- Active Model Pill / Indicator -->
-        <button class="chat-model-pill" id="chatModelPill" title="Click to manage API key in Settings">
+        <!-- Interactive Model Selection Menu right in Chat -->
+        <div class="chat-model-selector-wrapper">
           <span class="pulse-dot" id="chatHeaderDot"></span>
-          <span class="model-name" id="chatHeaderModelName">Google Gemini</span>
-          <span class="model-status-badge" id="chatHeaderBadge">Ready</span>
-        </button>
+          <select id="chatModelSelect" class="chat-model-select" title="Change AI Model">
+            <!-- Populated dynamically via JS -->
+          </select>
+          <button type="button" class="btn-model-manage" id="btnManageKey" title="Configure API key in Settings">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+          </button>
+        </div>
       </div>
 
       <div class="chat-header-right">
@@ -79,7 +86,7 @@
         </svg>
       </div>
       <h1 id="welcomeTitle">What can I help you with?</h1>
-      <p class="welcome-sub" id="welcomeSub">Powered by your connected AI API key.</p>
+      <p class="welcome-sub" id="welcomeSub">Select a model above or connect your API key to chat.</p>
 
       <!-- Suggestion chips (Perplexity / ChatGPT style) -->
       <div class="chat-suggestions">
@@ -87,7 +94,7 @@
           <span class="chip-icon">⚛️</span>
           <span>Explain quantum computing simply</span>
         </button>
-        <button class="suggestion-chip" data-prompt="Write a clean Python function to scrape and parse JSON from a REST API">
+        <button class="suggestion-chip" data-prompt="Write a clean Python function to fetch and parse JSON from a REST API">
           <span class="chip-icon">💻</span>
           <span>Write a clean Python REST script</span>
         </button>
@@ -108,13 +115,13 @@
     <!-- Input area (always at bottom) -->
     <div class="chat-input-area">
       <div class="chat-input-wrapper">
-        <textarea id="chatInput" placeholder="Message Google Gemini... (Enter to send, Shift+Enter for newline)" rows="1"></textarea>
+        <textarea id="chatInput" placeholder="Message your AI model... (Enter to send, Shift+Enter for newline)" rows="1"></textarea>
         <button type="button" id="chatSendBtn" aria-label="Send message" title="Send message">
           <svg viewBox="0 0 24 24"><path d="M3.478 2.405a.75.75 0 0 0-.926.94l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94l18.5-8.25a.75.75 0 0 0 0-1.39l-18.5-8.55Z"/></svg>
         </button>
       </div>
       <div class="chat-input-footer" id="chatInputFooter">
-        MyApp connects directly to your provider's official API. Responses are generated in real-time.
+        Direct browser connection to official API servers. Responses are generated in real-time.
       </div>
     </div>
   </main>
@@ -137,29 +144,50 @@
       </button>
     </div>
 
-    <!-- AI API Key Management Card -->
+    <!-- AI API Key & Model Configuration Card -->
     <div class="api-key-card">
       <div class="card-header">
         <div class="card-header-title">
-          <span>AI API Configuration</span>
+          <span>AI Provider & Model Settings</span>
           <span class="active-badge" id="activeProviderBadge">Active: Google Gemini</span>
         </div>
-        <span>Select your provider, paste your key, and test the connection</span>
+        <span>Select your provider, choose or fetch models, and manage your API key</span>
       </div>
 
       <div class="api-key-form">
-        <label class="form-label" for="apiProvider">Select AI Provider:</label>
+        <!-- Provider Selection -->
+        <label class="form-label" for="apiProvider">Provider:</label>
         <select id="apiProvider">
-          <option value="Google Gemini" selected>Google Gemini (Free tier available)</option>
+          <option value="Google Gemini" selected>Google Gemini</option>
           <option value="OpenRouter">OpenRouter (Access all models)</option>
-          <option value="OpenAI">OpenAI (ChatGPT)</option>
-          <option value="Anthropic">Anthropic (Claude)</option>
           <option value="Groq">Groq (Ultra-fast inference)</option>
+          <option value="OpenAI">OpenAI</option>
+          <option value="Anthropic">Anthropic</option>
           <option value="Mistral">Mistral AI</option>
           <option value="Cohere">Cohere</option>
           <option value="Perplexity">Perplexity</option>
         </select>
 
+        <!-- Model Selection Menu -->
+        <div class="model-selection-group">
+          <div class="model-selection-header">
+            <label class="form-label" for="settingsModelSelect">Model Selection:</label>
+            <button type="button" class="btn-fetch-models" id="btnFetchModels" title="Ask provider API for available models">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+              </svg>
+              <span>Fetch Live Models</span>
+            </button>
+          </div>
+          <select id="settingsModelSelect">
+            <!-- Dynamically populated per provider -->
+          </select>
+          <div class="custom-model-box" id="customModelBox" style="display: none;">
+            <input type="text" id="customModelInput" placeholder="Enter custom model identifier..." />
+          </div>
+        </div>
+
+        <!-- API Key Input -->
         <label class="form-label" for="apiKeyInput">API Key:</label>
         <div class="input-row">
           <div class="password-input-wrapper">
@@ -173,22 +201,24 @@
           </div>
         </div>
 
+        <!-- Buttons Row -->
         <div class="btn-actions-row">
           <button type="button" class="btn-save" id="apiSaveBtn">Save & Set Active</button>
-          <button type="button" class="btn-test" id="apiTestBtn" title="Test if this API key works">
+          <button type="button" class="btn-test" id="apiTestBtn" title="Test key directly with the provider API">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
               <polygon points="5 3 19 12 5 21 5 3"/>
             </svg>
             Test Connection
           </button>
-          <button type="button" class="btn-delete" id="apiDeleteBtn" title="Remove this key">Remove</button>
+          <button type="button" class="btn-delete" id="apiDeleteBtn" title="Remove key for this provider">Remove</button>
+          <button type="button" class="btn-clear-all" id="apiClearAllBtn" title="Wipe all invalid and stored keys">Clear All Keys</button>
         </div>
 
         <div class="api-key-status" id="apiStatus"></div>
       </div>
     </div>
 
-    <!-- Prominent Connection Status Box -->
+    <!-- Connection Status Box -->
     <div class="connection-box" id="connectionBox">
       <div class="connection-box-left">
         <div class="connection-dot" id="connectionDot"></div>
@@ -200,91 +230,52 @@
       <div class="connection-badge" id="connectionBadge">Offline</div>
     </div>
 
-    <!-- Saved Providers Quick-Switch Bar -->
+    <!-- Saved Providers Quick-Switch -->
     <div class="saved-providers-card" id="savedProvidersCard">
       <div class="saved-card-header">
-        <span>Detected Keys Across Providers</span>
-        <span class="subtext">Click any detected provider to set as Active</span>
+        <span>Configured Providers</span>
+        <span class="subtext">Click any saved provider to set as Active</span>
       </div>
       <div class="saved-providers-chips" id="savedProvidersChips">
         <!-- Rendered dynamically via JS -->
       </div>
     </div>
 
-    <!-- Provider limits reference -->
-    <div class="limits-table-card">
-      <div class="limits-table-header">Rate limits by provider <span>(Free tier overview)</span></div>
-      <table class="limits-table">
-        <thead>
-          <tr>
-            <th>Provider</th>
-            <th>RPM</th>
-            <th>TPM</th>
-            <th>Daily Limit</th>
-            <th>Best Free Model</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr data-provider="Google Gemini">
-            <td><strong>Google Gemini</strong></td>
-            <td>15</td>
-            <td>1,000,000</td>
-            <td>1,500 req/day</td>
-            <td>gemini-1.5-flash</td>
-          </tr>
-          <tr data-provider="OpenRouter">
-            <td><strong>OpenRouter</strong></td>
-            <td>20</td>
-            <td>Varies</td>
-            <td>200 req/day</td>
-            <td>free router / auto</td>
-          </tr>
-          <tr data-provider="Groq">
-            <td><strong>Groq</strong></td>
-            <td>30</td>
-            <td>15,000</td>
-            <td>14,400 req/day</td>
-            <td>llama-3.1-8b</td>
-          </tr>
-          <tr data-provider="OpenAI">
-            <td><strong>OpenAI</strong></td>
-            <td>3</td>
-            <td>40,000</td>
-            <td>200 req</td>
-            <td>gpt-3.5-turbo</td>
-          </tr>
-          <tr data-provider="Anthropic">
-            <td><strong>Anthropic</strong></td>
-            <td>5</td>
-            <td>20,000</td>
-            <td>1,000 req</td>
-            <td>claude-3-haiku</td>
-          </tr>
-          <tr data-provider="Mistral">
-            <td><strong>Mistral</strong></td>
-            <td>1</td>
-            <td>500,000</td>
-            <td>Pay-as-you-go</td>
-            <td>mistral-small</td>
-          </tr>
-          <tr data-provider="Cohere">
-            <td><strong>Cohere</strong></td>
-            <td>20</td>
-            <td>—</td>
-            <td>1,000 req</td>
-            <td>command-r</td>
-          </tr>
-          <tr data-provider="Perplexity">
-            <td><strong>Perplexity</strong></td>
-            <td>5</td>
-            <td>—</td>
-            <td>Varies</td>
-            <td>sonar</td>
-          </tr>
-        </tbody>
-      </table>
-      <div class="limits-table-footer">RPM = Requests/Min · TPM = Tokens/Min · Google Gemini offers generous free tier keys directly from Google AI Studio.</div>
+    <!-- Clean Live Key & Session Metrics Card (NO PRE-ASSUMED STATS) -->
+    <div class="live-stats-card" id="liveStatsCard">
+      <div class="live-stats-header">
+        <div class="live-stats-title">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+          <span>Live API & Session Metrics</span>
+        </div>
+        <span class="live-status-pill" id="liveStatusPill">Live</span>
+      </div>
+      <div class="live-stats-grid">
+        <div class="stat-box">
+          <div class="stat-label">Key Status</div>
+          <div class="stat-value" id="statKeyStatus">Not Verified</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Active Model</div>
+          <div class="stat-value stat-mono" id="statActiveModel">—</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Last Latency</div>
+          <div class="stat-value" id="statLatency">—</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Last Tokens Used</div>
+          <div class="stat-value" id="statTokens">—</div>
+        </div>
+        <div class="stat-box full-width">
+          <div class="stat-label">Live API Key Quota & Details (queried from server)</div>
+          <div class="stat-value-sub" id="statKeyDetails">Connect a key and run a query to inspect live response metrics. Zero pre-assumptions.</div>
+        </div>
+      </div>
     </div>
+
   </div>
 
   <!-- Account page (placeholder) -->

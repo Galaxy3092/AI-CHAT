@@ -1,6 +1,6 @@
 # MyApp — Project Documentation
 
-> An AI assistant web application with ChatGPT / Perplexity-style interface, multi-provider API support, live connection status indicators, and rate limits tracking. Built with vanilla HTML, CSS, and JS (zero frameworks).
+> An AI assistant web application with a ChatGPT / Perplexity-style interface, dynamic model selection, live API connection metrics, and multi-provider AI support. Built with vanilla HTML, CSS, and JS (zero frameworks).
 
 ---
 
@@ -10,7 +10,7 @@
 website/
 ├── index.html    ← Main application HTML (SPA page structure)
 ├── style.css     ← Modern theme tokens, ChatGPT/Perplexity layout, animations, badges
-├── script.js     ← SPA navigation, live API calls, connection test, status detection
+├── script.js     ← SPA navigation, live API calls, dynamic model menus, real-time metrics
 └── README.md     ← Documentation & usage guide
 ```
 
@@ -18,37 +18,30 @@ website/
 
 ## Key Features
 
-### 1. Chat Experience (ChatGPT & Perplexity Inspired)
-- **Top Header Bar**: Shows the currently active AI provider (e.g. `🟢 Google Gemini`) with connection status badge. Clicking it navigates straight to Settings to manage keys.
-- **New Chat Button**: Clears the conversation history and resets to the welcome screen.
-- **Welcome Screen**: Clean typography with quick-start suggestion chips (*"Explain quantum computing"*, *"Write a clean Python REST script"*, etc.).
-- **Message Bubbles**: Styled user and assistant message rows with avatars, role labels, model tags, and formatted Markdown rendering (code blocks, bold, italics, paragraphs).
-- **Typing Indicator**: Animated 3-dot bounce indicating active response generation.
+### 1. Model Selection Menu
+- **In Chat Header**: Interactive model dropdown directly at the top of the chat area (like ChatGPT / Perplexity). Easily switch between models on the fly.
+- **In Settings**: Dropdown with curated models per provider, custom model ID input, and a **"Fetch Live Models"** button that queries the provider's API directly for your key's accessible models.
+- **Dynamic Routing**: The chosen model is stored per provider and passed to each API request.
+
+### 2. Live Honest Metrics (Zero Pre-Assumed Stats)
+- **No Hardcoded Numbers**: Removed all fake/pre-assumed RPM, TPM, and daily quota tables.
+- **Query the Key Directly**:
+  - For Google Gemini: queries `https://generativelanguage.googleapis.com/v1beta/models?key=...` to verify the key and list accessible models.
+  - For OpenRouter: queries `https://openrouter.ai/api/v1/auth/key` to fetch live account usage, limits, and rate limits.
+  - For Groq / OpenAI: queries `/v1/models` for active account status.
+- **Real-Time Session Metrics**: Tracks actual latency (<kbd>ms</kbd>) and tokens returned directly from API responses (`usageMetadata` / `usage`).
+
+### 3. Key Cleanup & Security
+- **Clear All Keys**: One-click **"Clear All Keys"** button in Settings to completely wipe invalid or stale keys from `localStorage` and start fresh.
+- **Remove Single Key**: Remove key for any individual provider.
+- **Password Visibility Toggle**: Inspect pasted keys to verify there are no hidden whitespaces.
+
+### 4. Chat Interface
+- **Top Header Bar**: Displays the active provider and model with a live status indicator.
+- **Suggestion Chips**: Prompt ideas on the welcome screen to kick off conversations with one click.
+- **"New Chat" Button**: Clears the conversation history and resets the view.
+- **Markdown & Code Rendering**: User and AI message bubbles with syntax-highlighted code blocks, bold, italics, and avatars.
 - **Auto-expanding Input**: Textarea grows dynamically with multiline input; <kbd>Enter</kbd> sends and <kbd>Shift</kbd>+<kbd>Enter</kbd> inserts a newline.
-
-### 2. Multi-Provider AI API Integration
-Direct browser-to-API calls with error handling:
-- **Google Gemini** (Recommended free tier): `gemini-1.5-flash` with full multi-turn conversation support.
-- **OpenRouter**: Unified access across free and premium models.
-- **Groq**: Ultra-fast Llama 3.1 8B inference.
-- **OpenAI**: GPT-3.5 Turbo.
-- **Anthropic**: Claude 3 Haiku with direct browser access header.
-- **Mistral**: Mistral Small.
-- **Cohere**: Command-R.
-- **Perplexity**: Sonar.
-
-### 3. API Key & Connection Detection
-- **Live Connection Status Box**: Bold, animated status card with a pulsing green dot when connected or red dot when offline.
-- **One-Click Connection Test**: **"Test Connection"** button verifies your API key against the provider's official servers before you start chatting.
-- **Key Visibility Toggle**: Eye icon to inspect/hide pasted keys.
-- **Detected Keys Quick-Switcher**: Lists all providers that have keys saved on your browser; click any detected provider to set it as active immediately.
-- **Sidebar Status Indicator**: Mini status dot and provider name pinned to the bottom of the sidebar.
-
-### 4. Rate Limits Reference
-Comprehensive rate limit reference table comparing RPM, TPM, and daily limits across all 8 providers (focusing on free tier offerings).
-
-### 5. Theme System
-Clean CSS custom property system supporting instant Day/Night toggling with smooth transitions and persistent `localStorage` preference.
 
 ---
 

@@ -103,6 +103,82 @@
         <div class="api-key-status" id="apiStatus"></div>
       </div>
     </div>
+
+    <!-- API limits info bar -->
+    <div class="api-limits-bar" id="apiLimitsBar">
+      <div class="api-limits-icon">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </div>
+      <div class="api-limits-content">
+        <div class="api-limits-title" id="apiLimitsTitle">No API key connected</div>
+        <div class="api-limits-detail" id="apiLimitsDetail">Add an API key above to start chatting with AI.</div>
+      </div>
+      <div class="api-limits-badge" id="apiLimitsBadge">Inactive</div>
+    </div>
+
+    <!-- Provider limits reference -->
+    <div class="limits-table-card" id="limitsTableCard">
+      <div class="limits-table-header">Rate limits by provider <span>(free tier)</span></div>
+      <table class="limits-table">
+        <thead>
+          <tr>
+            <th>Provider</th>
+            <th>RPM</th>
+            <th>TPM</th>
+            <th>Daily limit</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr data-provider="OpenAI">
+            <td>OpenAI</td>
+            <td>3</td>
+            <td>40,000</td>
+            <td>200 req</td>
+          </tr>
+          <tr data-provider="Anthropic">
+            <td>Anthropic</td>
+            <td>5</td>
+            <td>20,000</td>
+            <td>1,000 req</td>
+          </tr>
+          <tr data-provider="Google Gemini">
+            <td>Google Gemini</td>
+            <td>15</td>
+            <td>1,000,000</td>
+            <td>1,500 req</td>
+          </tr>
+          <tr data-provider="Mistral">
+            <td>Mistral</td>
+            <td>1</td>
+            <td>500,000</td>
+            <td>—</td>
+          </tr>
+          <tr data-provider="Cohere">
+            <td>Cohere</td>
+            <td>20</td>
+            <td>—</td>
+            <td>1,000 req</td>
+          </tr>
+          <tr data-provider="Groq">
+            <td>Groq</td>
+            <td>30</td>
+            <td>15,000</td>
+            <td>14,400 req</td>
+          </tr>
+          <tr data-provider="Perplexity">
+            <td>Perplexity</td>
+            <td>5</td>
+            <td>—</td>
+            <td>—</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="limits-table-footer">RPM = requests per minute · TPM = tokens per minute · Limits vary by plan</div>
+    </div>
   </div>
 
   <!-- Account page (placeholder) -->

@@ -529,14 +529,22 @@ body {
   min-width: 0;
 }
 
+.message-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.4rem;
+  gap: 0.5rem;
+}
+
 .message-role {
   font-size: 0.8rem;
   font-weight: 600;
-  margin-bottom: 0.35rem;
   color: var(--text);
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  min-width: 0;
 }
 
 .message-role .model-tag {
@@ -546,6 +554,59 @@ body {
   background: var(--hover-bg);
   color: var(--text-muted);
   font-weight: normal;
+}
+
+/* Copy Button for Question & Response */
+.btn-copy-msg {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  opacity: 0;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.message:hover .btn-copy-msg,
+.btn-copy-msg:focus-visible,
+.btn-copy-msg.copied {
+  opacity: 1;
+}
+
+.btn-copy-msg:hover {
+  background: var(--hover-bg);
+  color: var(--text);
+  border-color: var(--settings-card-border);
+}
+
+.btn-copy-msg.copied {
+  color: #22c55e;
+  border-color: rgba(34, 197, 94, 0.3);
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.btn-copy-msg svg {
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
+
+.btn-copy-msg:active svg {
+  transform: scale(0.9);
+}
+
+@media (max-width: 768px) {
+  .btn-copy-msg {
+    opacity: 0.85;
+  }
 }
 
 .message-content {

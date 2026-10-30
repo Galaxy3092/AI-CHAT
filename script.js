@@ -462,6 +462,10 @@ apiDeleteBtn.addEventListener('click', () => {
 apiClearAllBtn.addEventListener('click', () => {
   if (!confirm('Clear all stored models and configurations?')) return;
   localStorage.clear();
+  conversationHistory = [];
+  chatMessages.innerHTML = '';
+  chatMessages.classList.remove('visible');
+  chatWelcome.classList.remove('hidden');
   liveMetrics = {
     lastLatencyMs: null,
     lastTokens: null,
@@ -543,8 +547,42 @@ suggestionChips.forEach(chip => {
 
 chatNewBtn.addEventListener('click', resetChat);
 
+function saveChatHistory() {
+  try {
+    localStorage.setItem('chat_history', JSON.stringify(conversationHistory));
+  } catch (e) {
+    console.error('Failed to save chat history to localStorage:', e);
+  }
+}
+
+function loadChatHistory() {
+  try {
+    const saved = localStorage.getItem('chat_history');
+    if (!saved) return;
+    const history = JSON.parse(saved);
+    if (Array.isArray(history) && history.length > 0) {
+      conversationHistory = history;
+      chatWelcome.classList.add('hidden');
+      chatMessages.classList.add('visible');
+      chatMessages.innerHTML = '';
+      history.forEach(item => {
+        appendMessage(
+          item.role === 'user' ? 'user' : 'ai',
+          item.content,
+          item.provider || 'MyApp',
+          item.model || ''
+        );
+      });
+      scrollToBottom();
+    }
+  } catch (err) {
+    console.error('Failed to load chat history:', err);
+  }
+}
+
 function resetChat() {
   conversationHistory = [];
+  localStorage.removeItem('chat_history');
   chatMessages.innerHTML = '';
   chatMessages.classList.remove('visible');
   chatWelcome.classList.remove('hidden');
@@ -569,7 +607,12 @@ function sendMessage() {
   chatMessages.classList.add('visible');
 
   appendMessage('user', text);
-  conversationHistory.push({ role: 'user', content: text });
+  conversationHistory.push({
+    role: 'user',
+    content: text,
+    timestamp: Date.now()
+  });
+  saveChatHistory();
 
   chatInput.value = '';
   chatInput.style.height = 'auto';
@@ -593,7 +636,14 @@ async function runChatQuery(provider, model) {
 
     typingEl.remove();
     appendMessage('ai', result.reply, provider, model);
-    conversationHistory.push({ role: 'assistant', content: result.reply });
+    conversationHistory.push({
+      role: 'assistant',
+      content: result.reply,
+      provider: provider,
+      model: model,
+      timestamp: Date.now()
+    });
+    saveChatHistory();
 
   } catch (err) {
     typingEl.remove();
@@ -608,12 +658,18 @@ async function runChatQuery(provider, model) {
 
 // ── Model Call Execution ──
 async function executeModelCall(provider, model, key, history) {
+  // Sanitize history to pure role & content for API specs
+  const cleanHistory = history.map(m => ({
+    role: m.role,
+    content: m.content
+  }));
+
   // 1. Google Gemini
   if (provider === 'Google Gemini') {
     if (!key) throw new Error('Google Gemini requires an API key in Settings.');
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
     const payload = {
-      contents: history.map(m => ({
+      contents: cleanHistory.map(m => ({
         role: m.role === 'assistant' ? 'model' : 'user',
         parts: [{ text: m.content }]
       }))
@@ -647,7 +703,7 @@ async function executeModelCall(provider, model, key, history) {
       body: JSON.stringify({
         model: model,
         max_tokens: 1500,
-        messages: history
+        messages: cleanHistory
       })
     });
     if (!res.ok) {
@@ -684,7 +740,7 @@ async function executeModelCall(provider, model, key, history) {
   const res = await fetch(endpoint, {
     method: 'POST',
     headers: headers,
-    body: JSON.stringify({ model: model, messages: history })
+    body: JSON.stringify({ model: model, messages: cleanHistory })
   });
 
   if (!res.ok) {
@@ -702,6 +758,52 @@ async function executeModelCall(provider, model, key, history) {
 // ══════════════════════════════════════
 //  Message Rendering Helpers
 // ══════════════════════════════════════
+
+// Copy to Clipboard with Visual Feedback
+function copyToClipboard(text, btn) {
+  if (!text) return;
+  const originalHTML = btn.innerHTML;
+
+  function setCopiedState() {
+    btn.classList.add('copied');
+    btn.innerHTML = `
+      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+      <span>Copied!</span>
+    `;
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = originalHTML;
+    }, 2000);
+  }
+
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(setCopiedState).catch(() => {
+      fallbackCopyText(text, setCopiedState);
+    });
+  } else {
+    fallbackCopyText(text, setCopiedState);
+  }
+}
+
+function fallbackCopyText(text, callback) {
+  const textArea = document.createElement('textarea');
+  textArea.value = text;
+  textArea.style.position = 'fixed';
+  textArea.style.left = '-9999px';
+  textArea.style.top = '-9999px';
+  document.body.appendChild(textArea);
+  textArea.focus();
+  textArea.select();
+  try {
+    const successful = document.execCommand('copy');
+    if (successful && callback) callback();
+  } catch (err) {
+    console.error('Fallback copy failed', err);
+  }
+  document.body.removeChild(textArea);
+}
 
 function showTypingIndicator(providerName, modelName) {
   const typingMsg = document.createElement('div');
@@ -739,15 +841,31 @@ function appendMessage(role, content, providerName = 'MyApp', modelName = '') {
     ? '<span>You</span>'
     : `<span>${modelName || providerName}</span>`;
 
+  const copyLabel = role === 'user' ? 'Copy question' : 'Copy response';
+
   const formatted = formatMarkdown(content);
 
   msg.innerHTML = `
     ${avatarHTML}
     <div class="message-body">
-      <div class="message-role">${roleLabel}</div>
+      <div class="message-header">
+        <div class="message-role">${roleLabel}</div>
+        <button type="button" class="btn-copy-msg" title="${copyLabel}" aria-label="${copyLabel}">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+          <span class="copy-text">Copy</span>
+        </button>
+      </div>
       <div class="message-content">${formatted}</div>
     </div>
   `;
+
+  const copyBtn = msg.querySelector('.btn-copy-msg');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', () => copyToClipboard(content, copyBtn));
+  }
 
   chatMessages.appendChild(msg);
   scrollToBottom();
@@ -755,11 +873,22 @@ function appendMessage(role, content, providerName = 'MyApp', modelName = '') {
 
 function formatMarkdown(text) {
   let html = escapeHTML(text);
-  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
+  const codeBlocks = [];
+  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (match, lang, code) => {
+    const idx = codeBlocks.length;
+    codeBlocks.push(`<pre><code class="language-${lang}">${code}</code></pre>`);
+    return `__CODE_BLOCK_${idx}__`;
+  });
   html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
   html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
   html = html.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>');
-  html = html.split('\n\n').map(p => '<p>' + p.replace(/\n/g, '<br>') + '</p>').join('');
+  html = html.split('\n\n').map(p => {
+    if (p.trim().match(/^__CODE_BLOCK_\d+__$/)) {
+      return p;
+    }
+    return '<p>' + p.replace(/\n/g, '<br>') + '</p>';
+  }).join('');
+  html = html.replace(/__CODE_BLOCK_(\d+)__/g, (_, idx) => codeBlocks[idx]);
   return html;
 }
 
@@ -782,6 +911,9 @@ function escapeHTML(str) {
 
 const initProvider = getCurrentProvider();
 updateUI();
+
+// Load saved chat history from localStorage
+loadChatHistory();
 
 // Check if cached models exist, otherwise auto-fetch immediately
 const cached = localStorage.getItem('fetched_models_' + initProvider);

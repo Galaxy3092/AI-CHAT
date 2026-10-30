@@ -38,7 +38,9 @@ website/
 ### 4. ChatGPT / Perplexity Style Chat
 - **Top Header Bar**: Shows active model with live status indicator.
 - **Welcome Screen**: Clean layout with quick prompt chips.
-- **"New Chat" Button**: Clears the conversation history and resets the view.
+- **Copy Buttons**: One-click copy button on both user questions and AI responses with instant visual confirmation (`Copied!`).
+- **Persistent Chat History**: Automatically preserves conversation history in `localStorage` across page refreshes and browser sessions.
+- **"New Chat" Button**: Clears the conversation history and resets the view for a fresh session.
 - **Markdown & Code Rendering**: User and AI message bubbles with formatted code blocks, bold, italics, and avatars.
 - **Auto-expanding Textarea**: Grows dynamically with multiline input; <kbd>Enter</kbd> sends and <kbd>Shift</kbd>+<kbd>Enter</kbd> inserts a newline.
 
@@ -47,7 +49,7 @@ website/
 ## How to Run
 
 ```bash
-cd website
+cd "AI CHAT"
 python3 -m http.server 8080
 ```
 

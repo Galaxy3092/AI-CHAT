@@ -6,6 +6,7 @@
 
 /* ── Theme variables ── */
 :root[data-theme="dark"] {
+  color-scheme: dark;
   --bg: #111111;
   --sidebar-bg: #0c0c0c;
   --sidebar-border: #1e1e1e;
@@ -45,6 +46,7 @@
 }
 
 :root[data-theme="light"] {
+  color-scheme: light;
   --bg: #f8f9fa;
   --sidebar-bg: #ffffff;
   --sidebar-border: #e6e8eb;
@@ -423,6 +425,7 @@ body {
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
+  color-scheme: inherit;
 }
 
 .fetch-status-indicator {
@@ -430,16 +433,26 @@ body {
   color: #3b82f6;
   font-weight: 500;
 }
-  cursor: pointer;
-  outline: none;
-  padding-right: 0.3rem;
-  appearance: none;
-  -webkit-appearance: none;
+
+/* ── Dark / Light mode dropdown option styling for accessibility ── */
+.chat-model-select option,
+select option {
+  background-color: var(--input-bg);
+  color: var(--text);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.88rem;
 }
 
-.chat-model-select option {
-  background: var(--settings-card-bg);
-  color: var(--text);
+:root[data-theme="dark"] .chat-model-select option,
+:root[data-theme="dark"] select option {
+  background-color: #1a1a1a;
+  color: #f0f0f0;
+}
+
+:root[data-theme="light"] .chat-model-select option,
+:root[data-theme="light"] select option {
+  background-color: #ffffff;
+  color: #1a1a1a;
 }
 
 .btn-model-manage {

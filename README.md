@@ -37,6 +37,7 @@ website/
 
 ### 4. ChatGPT / Perplexity Style Chat
 - **Top Header Bar**: Shows active model with live status indicator.
+- **Incognito / Temporary Chat**: Dedicated incognito mode button in the header (`🕶️ Incognito`) that disables all storage and sidebar saving for private, ephemeral sessions.
 - **Sidebar Saved Chats**: Full conversation history in the left sidebar with auto-generated session titles, active highlight, one-click switching, and individual session deletion.
 - **Bottom Copy Buttons**: Clean action bar at the bottom of every question and response with instant visual feedback (`Copied!`).
 - **New Chat Buttons**: Start a fresh conversation instantly from either the left sidebar or the top header.

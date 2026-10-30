@@ -42,11 +42,17 @@ const statKeyDetails = document.getElementById('statKeyDetails');
 const chatHeaderDot = document.getElementById('chatHeaderDot');
 const chatModelSelect = document.getElementById('chatModelSelect');
 const btnManageKey = document.getElementById('btnManageKey');
+const incognitoBtn = document.getElementById('incognitoBtn');
+const incognitoBanner = document.getElementById('incognitoBanner');
+const btnExitIncognito = document.getElementById('btnExitIncognito');
 const chatNewBtn = document.getElementById('chatNewBtn');
 const chatWelcome = document.getElementById('chatWelcome');
+const welcomeTitle = document.getElementById('welcomeTitle');
+const welcomeSub = document.getElementById('welcomeSub');
 const chatMessages = document.getElementById('chatMessages');
 const chatInput = document.getElementById('chatInput');
 const chatSendBtn = document.getElementById('chatSendBtn');
+const chatInputFooter = document.getElementById('chatInputFooter');
 const suggestionChips = document.querySelectorAll('.suggestion-chip');
 
 // Sidebar Elements
@@ -333,7 +339,12 @@ function updateUI() {
 
   // Header and Sidebar indicators
   const isReady = !!model;
-  if (isReady) {
+  if (isIncognitoMode) {
+    chatHeaderDot.className = 'pulse-dot online';
+    sidebarDot.className = 'status-indicator-dot active';
+    sidebarStatusText.textContent = `${model || 'Incognito'}`;
+    chatInput.placeholder = "Message in Incognito mode... (messages won't be saved)";
+  } else if (isReady) {
     chatHeaderDot.className = 'pulse-dot online';
     sidebarDot.className = 'status-indicator-dot active';
     sidebarStatusText.textContent = `${model}`;
@@ -520,11 +531,57 @@ apiTestBtn.addEventListener('click', async () => {
 
 
 // ══════════════════════════════════════
-//  Chat Core Logic & Sessions in Sidebar
+//  Chat Core Logic, Sessions & Incognito
 // ══════════════════════════════════════
 
 let activeSessionId = localStorage.getItem('active_chat_id') || null;
 let conversationHistory = [];
+let isIncognitoMode = false;
+
+function setIncognitoMode(enable) {
+  isIncognitoMode = enable;
+  if (isIncognitoMode) {
+    incognitoBtn.classList.add('active');
+    incognitoBanner.style.display = 'flex';
+    welcomeTitle.textContent = '🕶️ Incognito Chat';
+    welcomeSub.textContent = 'Temporary conversation. Nothing is saved to your sidebar or device storage.';
+    chatInput.placeholder = "Message in Incognito mode... (messages won't be saved)";
+    chatInputFooter.innerHTML = '🕶️ <strong>Incognito Mode active</strong>: Messages are temporary and will not be saved to history.';
+
+    // Clear active session selection in sidebar visually
+    document.querySelectorAll('.sidebar-chat-item').forEach(i => i.classList.remove('active'));
+
+    // Start fresh temporary in-memory session
+    conversationHistory = [];
+    chatMessages.innerHTML = '';
+    chatMessages.classList.remove('visible');
+    chatWelcome.classList.remove('hidden');
+    chatInput.value = '';
+    chatInput.style.height = 'auto';
+    chatInput.focus();
+  } else {
+    incognitoBtn.classList.remove('active');
+    incognitoBanner.style.display = 'none';
+    welcomeTitle.textContent = 'What can I help you with?';
+    welcomeSub.textContent = 'Models are auto-fetched live from your provider API.';
+    chatInputFooter.textContent = 'Direct connection to your selected model. Auto-fetched in real-time.';
+    updateUI();
+
+    // Restore last active standard session or fresh chat
+    if (activeSessionId) {
+      loadChatSession(activeSessionId);
+    } else {
+      startNewChat();
+    }
+  }
+}
+
+if (incognitoBtn) {
+  incognitoBtn.addEventListener('click', () => setIncognitoMode(!isIncognitoMode));
+}
+if (btnExitIncognito) {
+  btnExitIncognito.addEventListener('click', () => setIncognitoMode(false));
+}
 
 function getStoredSessions() {
   try {
@@ -556,7 +613,8 @@ function renderSidebarHistory() {
 
   sessions.forEach(session => {
     const item = document.createElement('div');
-    item.className = 'sidebar-chat-item' + (session.id === activeSessionId ? ' active' : '');
+    const isActive = !isIncognitoMode && session.id === activeSessionId;
+    item.className = 'sidebar-chat-item' + (isActive ? ' active' : '');
     item.setAttribute('data-id', session.id);
 
     const safeTitle = escapeHTML(session.title || 'Untitled Chat');
@@ -592,6 +650,17 @@ function renderSidebarHistory() {
 }
 
 function loadChatSession(sessionId) {
+  // If in incognito mode, switch back to standard mode when loading a saved chat
+  if (isIncognitoMode) {
+    isIncognitoMode = false;
+    incognitoBtn.classList.remove('active');
+    incognitoBanner.style.display = 'none';
+    welcomeTitle.textContent = 'What can I help you with?';
+    welcomeSub.textContent = 'Models are auto-fetched live from your provider API.';
+    chatInputFooter.textContent = 'Direct connection to your selected model. Auto-fetched in real-time.';
+    updateUI();
+  }
+
   const sessions = getStoredSessions();
   const session = sessions.find(s => s.id === sessionId);
   if (!session) return;
@@ -637,6 +706,17 @@ function deleteChatSession(sessionId) {
 }
 
 function startNewChat() {
+  if (isIncognitoMode) {
+    conversationHistory = [];
+    chatMessages.innerHTML = '';
+    chatMessages.classList.remove('visible');
+    chatWelcome.classList.remove('hidden');
+    chatInput.value = '';
+    chatInput.style.height = 'auto';
+    chatInput.focus();
+    return;
+  }
+
   activeSessionId = null;
   localStorage.removeItem('active_chat_id');
   conversationHistory = [];
@@ -693,25 +773,6 @@ function sendMessage() {
     return;
   }
 
-  // Ensure active session exists or create a new one
-  let sessions = getStoredSessions();
-  let currentSession = sessions.find(s => s.id === activeSessionId);
-
-  if (!currentSession) {
-    const cleanTitle = text.replace(/[\n\r]+/g, ' ').trim();
-    const title = cleanTitle.length > 30 ? cleanTitle.substring(0, 30) + '...' : cleanTitle;
-    currentSession = {
-      id: 'chat-' + Date.now(),
-      title: title || 'New Chat',
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      messages: []
-    };
-    activeSessionId = currentSession.id;
-    localStorage.setItem('active_chat_id', activeSessionId);
-    sessions.unshift(currentSession);
-  }
-
   chatWelcome.classList.add('hidden');
   chatMessages.classList.add('visible');
 
@@ -723,11 +784,33 @@ function sendMessage() {
     timestamp: Date.now()
   };
   conversationHistory.push(userMsg);
-  currentSession.messages.push(userMsg);
-  currentSession.updatedAt = Date.now();
 
-  saveStoredSessions(sessions);
-  renderSidebarHistory();
+  // If NOT in incognito mode, persist conversation into saved sessions
+  if (!isIncognitoMode) {
+    let sessions = getStoredSessions();
+    let currentSession = sessions.find(s => s.id === activeSessionId);
+
+    if (!currentSession) {
+      const cleanTitle = text.replace(/[\n\r]+/g, ' ').trim();
+      const title = cleanTitle.length > 30 ? cleanTitle.substring(0, 30) + '...' : cleanTitle;
+      currentSession = {
+        id: 'chat-' + Date.now(),
+        title: title || 'New Chat',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        messages: []
+      };
+      activeSessionId = currentSession.id;
+      localStorage.setItem('active_chat_id', activeSessionId);
+      sessions.unshift(currentSession);
+    }
+
+    currentSession.messages.push(userMsg);
+    currentSession.updatedAt = Date.now();
+
+    saveStoredSessions(sessions);
+    renderSidebarHistory();
+  }
 
   chatInput.value = '';
   chatInput.style.height = 'auto';
@@ -761,12 +844,15 @@ async function runChatQuery(provider, model) {
     };
     conversationHistory.push(aiMsg);
 
-    const sessions = getStoredSessions();
-    const currentSession = sessions.find(s => s.id === activeSessionId);
-    if (currentSession) {
-      currentSession.messages.push(aiMsg);
-      currentSession.updatedAt = Date.now();
-      saveStoredSessions(sessions);
+    // If NOT in incognito mode, persist assistant reply
+    if (!isIncognitoMode) {
+      const sessions = getStoredSessions();
+      const currentSession = sessions.find(s => s.id === activeSessionId);
+      if (currentSession) {
+        currentSession.messages.push(aiMsg);
+        currentSession.updatedAt = Date.now();
+        saveStoredSessions(sessions);
+      }
     }
 
   } catch (err) {

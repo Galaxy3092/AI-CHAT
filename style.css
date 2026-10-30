@@ -236,16 +236,34 @@ body {
 .chat-model-selector-wrapper {
   display: flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.5rem;
   background: var(--input-bg);
   border: 1px solid var(--input-border);
-  padding: 0.25rem 0.45rem 0.25rem 0.75rem;
+  padding: 0.25rem 0.5rem 0.25rem 0.75rem;
   border-radius: 999px;
   transition: all 0.2s;
 }
 
-.chat-model-selector-wrapper:hover {
+.chat-model-selector-wrapper:hover,
+.chat-model-selector-wrapper:focus-within {
   border-color: var(--input-focus-border);
+}
+
+.chat-model-input {
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-size: 0.84rem;
+  font-weight: 600;
+  font-family: inherit;
+  outline: none;
+  min-width: 140px;
+  max-width: 220px;
+}
+
+.chat-model-input::placeholder {
+  color: var(--input-placeholder);
+  font-weight: 400;
 }
 
 .chat-model-select {
@@ -855,7 +873,8 @@ body {
   letter-spacing: 0.04em;
 }
 
-.api-key-form select {
+.api-key-form select,
+.api-key-form input[type="text"] {
   width: 100%;
   padding: 0.65rem 0.85rem;
   border-radius: 9px;
@@ -866,6 +885,9 @@ body {
   font-family: inherit;
   outline: none;
   transition: border-color 0.2s;
+}
+
+.api-key-form select {
   cursor: pointer;
   appearance: none;
   -webkit-appearance: none;
@@ -875,7 +897,8 @@ body {
   padding-right: 2.2rem;
 }
 
-.api-key-form select:focus {
+.api-key-form select:focus,
+.api-key-form input[type="text"]:focus {
   border-color: var(--input-focus-border);
 }
 

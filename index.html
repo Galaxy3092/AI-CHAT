@@ -25,10 +25,10 @@
     </nav>
 
     <div class="sidebar-bottom">
-      <!-- Mini provider status in sidebar footer -->
-      <div class="sidebar-status" id="sidebarStatus" title="Active AI Provider">
+      <!-- Mini status in sidebar footer -->
+      <div class="sidebar-status" id="sidebarStatus" title="Active Model">
         <span class="status-indicator-dot" id="sidebarDot"></span>
-        <span class="sidebar-status-text" id="sidebarStatusText">Gemini (No Key)</span>
+        <span class="sidebar-status-text" id="sidebarStatusText">No Model Set</span>
       </div>
 
       <nav>
@@ -47,16 +47,18 @@
   <!-- Chat Page -->
   <main class="page page-chat active" id="page-chat">
 
-    <!-- Chat Header Top Bar with Model Selection Menu -->
+    <!-- Chat Header Top Bar with Flexible Model Input & Selector -->
     <header class="chat-header">
       <div class="chat-header-left">
-        <!-- Interactive Model Selection Menu right in Chat -->
         <div class="chat-model-selector-wrapper">
           <span class="pulse-dot" id="chatHeaderDot"></span>
-          <select id="chatModelSelect" class="chat-model-select" title="Change AI Model">
-            <!-- Populated dynamically via JS -->
+          <!-- Dynamic Model Input: user can type any model name directly -->
+          <input type="text" id="chatModelInput" class="chat-model-input" placeholder="Type any model name..." title="Type the model name you want to use" autocomplete="off" />
+          <!-- Dropdown only appears if user fetches models from an API -->
+          <select id="chatModelSelect" class="chat-model-select" style="display: none;" title="Select from fetched models">
+            <option value="">(No models fetched)</option>
           </select>
-          <button type="button" class="btn-model-manage" id="btnManageKey" title="Configure API key in Settings">
+          <button type="button" class="btn-model-manage" id="btnManageKey" title="Configure endpoints and keys in Settings">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="3"/>
               <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
@@ -86,9 +88,9 @@
         </svg>
       </div>
       <h1 id="welcomeTitle">What can I help you with?</h1>
-      <p class="welcome-sub" id="welcomeSub">Select a model above or connect your API key to chat.</p>
+      <p class="welcome-sub" id="welcomeSub">Type any model name above or configure your provider in Settings.</p>
 
-      <!-- Suggestion chips (Perplexity / ChatGPT style) -->
+      <!-- Suggestion chips -->
       <div class="chat-suggestions">
         <button class="suggestion-chip" data-prompt="Explain quantum computing in simple terms">
           <span class="chip-icon">⚛️</span>
@@ -102,9 +104,9 @@
           <span class="chip-icon">💡</span>
           <span>5 creative app ideas</span>
         </button>
-        <button class="suggestion-chip" data-prompt="Summarize the key differences between Gemini, GPT-4, and Claude">
+        <button class="suggestion-chip" data-prompt="Tell me an interesting and surprising science fact">
           <span class="chip-icon">⚡</span>
-          <span>Compare Gemini, GPT-4 & Claude</span>
+          <span>Surprising science fact</span>
         </button>
       </div>
     </div>
@@ -115,13 +117,13 @@
     <!-- Input area (always at bottom) -->
     <div class="chat-input-area">
       <div class="chat-input-wrapper">
-        <textarea id="chatInput" placeholder="Message your AI model... (Enter to send, Shift+Enter for newline)" rows="1"></textarea>
+        <textarea id="chatInput" placeholder="Message your model... (Enter to send, Shift+Enter for newline)" rows="1"></textarea>
         <button type="button" id="chatSendBtn" aria-label="Send message" title="Send message">
           <svg viewBox="0 0 24 24"><path d="M3.478 2.405a.75.75 0 0 0-.926.94l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94l18.5-8.25a.75.75 0 0 0 0-1.39l-18.5-8.55Z"/></svg>
         </button>
       </div>
       <div class="chat-input-footer" id="chatInputFooter">
-        Direct browser connection to official API servers. Responses are generated in real-time.
+        Direct connection to your selected model. Zero pre-configured models or keys.
       </div>
     </div>
   </main>
@@ -144,23 +146,24 @@
       </button>
     </div>
 
-    <!-- AI API Key & Model Configuration Card -->
+    <!-- Provider & Model Configuration (Clean, No Pre-Assumed Models or Keys) -->
     <div class="api-key-card">
       <div class="card-header">
         <div class="card-header-title">
-          <span>AI Provider & Model Settings</span>
-          <span class="active-badge" id="activeProviderBadge">Active: Google Gemini</span>
+          <span>AI Provider & Custom Model</span>
+          <span class="active-badge" id="activeProviderBadge">Bring Your Own Model</span>
         </div>
-        <span>Select your provider, choose or fetch models, and manage your API key</span>
+        <span>Select your provider, specify your model name, and optionally add an API key</span>
       </div>
 
       <div class="api-key-form">
         <!-- Provider Selection -->
-        <label class="form-label" for="apiProvider">Provider:</label>
+        <label class="form-label" for="apiProvider">Provider / Service:</label>
         <select id="apiProvider">
-          <option value="Google Gemini" selected>Google Gemini</option>
-          <option value="OpenRouter">OpenRouter (Access all models)</option>
-          <option value="Groq">Groq (Ultra-fast inference)</option>
+          <option value="Google Gemini">Google Gemini</option>
+          <option value="OpenRouter">OpenRouter</option>
+          <option value="Custom / Local (Ollama, LM Studio)">Custom / Local (Ollama, LM Studio, etc.)</option>
+          <option value="Groq">Groq</option>
           <option value="OpenAI">OpenAI</option>
           <option value="Anthropic">Anthropic</option>
           <option value="Mistral">Mistral AI</option>
@@ -168,30 +171,38 @@
           <option value="Perplexity">Perplexity</option>
         </select>
 
-        <!-- Model Selection Menu -->
+        <!-- Custom Endpoint URL (for local models or custom proxies) -->
+        <div id="customEndpointGroup" style="display: none;">
+          <label class="form-label" for="customEndpointInput">API Endpoint URL:</label>
+          <input type="text" id="customEndpointInput" placeholder="http://localhost:11434/v1/chat/completions" />
+        </div>
+
+        <!-- Model Name (Empty by default — user brings whatever model they want) -->
         <div class="model-selection-group">
           <div class="model-selection-header">
-            <label class="form-label" for="settingsModelSelect">Model Selection:</label>
-            <button type="button" class="btn-fetch-models" id="btnFetchModels" title="Ask provider API for available models">
+            <label class="form-label" for="modelInput">Model Name:</label>
+            <button type="button" class="btn-fetch-models" id="btnFetchModels" title="Query the API server for available models">
               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
               </svg>
-              <span>Fetch Live Models</span>
+              <span>Fetch Models from API</span>
             </button>
           </div>
-          <select id="settingsModelSelect">
-            <!-- Dynamically populated per provider -->
+
+          <!-- Direct Input: User types whatever model they bring -->
+          <input type="text" id="modelInput" placeholder="Type model name (e.g. gemini-1.5-flash, llama3, gpt-4o, etc.)..." />
+
+          <!-- Fetched models list (empty by default) -->
+          <select id="settingsModelSelect" style="display: none;">
+            <option value="">(No models fetched)</option>
           </select>
-          <div class="custom-model-box" id="customModelBox" style="display: none;">
-            <input type="text" id="customModelInput" placeholder="Enter custom model identifier..." />
-          </div>
         </div>
 
-        <!-- API Key Input -->
-        <label class="form-label" for="apiKeyInput">API Key:</label>
+        <!-- API Key Input (Optional) -->
+        <label class="form-label" for="apiKeyInput">API Key (Optional — leave empty if not required):</label>
         <div class="input-row">
           <div class="password-input-wrapper">
-            <input type="password" id="apiKeyInput" placeholder="Paste your API key here..." autocomplete="off" />
+            <input type="password" id="apiKeyInput" placeholder="Paste your API key (leave empty if not needed)..." autocomplete="off" />
             <button type="button" class="btn-toggle-visibility" id="btnToggleVisibility" title="Show/Hide API key">
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" id="eyeIcon">
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
@@ -203,15 +214,15 @@
 
         <!-- Buttons Row -->
         <div class="btn-actions-row">
-          <button type="button" class="btn-save" id="apiSaveBtn">Save & Set Active</button>
-          <button type="button" class="btn-test" id="apiTestBtn" title="Test key directly with the provider API">
+          <button type="button" class="btn-save" id="apiSaveBtn">Save Configuration</button>
+          <button type="button" class="btn-test" id="apiTestBtn" title="Test connection with current model & key">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
               <polygon points="5 3 19 12 5 21 5 3"/>
             </svg>
             Test Connection
           </button>
-          <button type="button" class="btn-delete" id="apiDeleteBtn" title="Remove key for this provider">Remove</button>
-          <button type="button" class="btn-clear-all" id="apiClearAllBtn" title="Wipe all invalid and stored keys">Clear All Keys</button>
+          <button type="button" class="btn-delete" id="apiDeleteBtn" title="Clear settings for this provider">Clear</button>
+          <button type="button" class="btn-clear-all" id="apiClearAllBtn" title="Reset all settings and models">Reset All</button>
         </div>
 
         <div class="api-key-status" id="apiStatus"></div>
@@ -223,55 +234,44 @@
       <div class="connection-box-left">
         <div class="connection-dot" id="connectionDot"></div>
         <div class="connection-info">
-          <div class="connection-title" id="connectionTitle">Google Gemini: Not Connected</div>
-          <div class="connection-desc" id="connectionDesc">No API key detected for Google Gemini. Paste key above and click Save.</div>
+          <div class="connection-title" id="connectionTitle">Status: Not Configured</div>
+          <div class="connection-desc" id="connectionDesc">Enter your model name above and optionally add a key if required.</div>
         </div>
       </div>
-      <div class="connection-badge" id="connectionBadge">Offline</div>
+      <div class="connection-badge" id="connectionBadge">Standby</div>
     </div>
 
-    <!-- Saved Providers Quick-Switch -->
-    <div class="saved-providers-card" id="savedProvidersCard">
-      <div class="saved-card-header">
-        <span>Configured Providers</span>
-        <span class="subtext">Click any saved provider to set as Active</span>
-      </div>
-      <div class="saved-providers-chips" id="savedProvidersChips">
-        <!-- Rendered dynamically via JS -->
-      </div>
-    </div>
-
-    <!-- Clean Live Key & Session Metrics Card (NO PRE-ASSUMED STATS) -->
+    <!-- Live Real-Time Metrics (Queried directly, Zero Pre-Assumptions) -->
     <div class="live-stats-card" id="liveStatsCard">
       <div class="live-stats-header">
         <div class="live-stats-title">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
           </svg>
-          <span>Live API & Session Metrics</span>
+          <span>Live Response Metrics</span>
         </div>
         <span class="live-status-pill" id="liveStatusPill">Live</span>
       </div>
       <div class="live-stats-grid">
         <div class="stat-box">
-          <div class="stat-label">Key Status</div>
-          <div class="stat-value" id="statKeyStatus">Not Verified</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-label">Active Model</div>
+          <div class="stat-label">Model in Use</div>
           <div class="stat-value stat-mono" id="statActiveModel">—</div>
         </div>
         <div class="stat-box">
-          <div class="stat-label">Last Latency</div>
+          <div class="stat-label">Provider Service</div>
+          <div class="stat-value" id="statProvider">—</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Last Response Time</div>
           <div class="stat-value" id="statLatency">—</div>
         </div>
         <div class="stat-box">
-          <div class="stat-label">Last Tokens Used</div>
+          <div class="stat-label">Tokens Returned</div>
           <div class="stat-value" id="statTokens">—</div>
         </div>
         <div class="stat-box full-width">
-          <div class="stat-label">Live API Key Quota & Details (queried from server)</div>
-          <div class="stat-value-sub" id="statKeyDetails">Connect a key and run a query to inspect live response metrics. Zero pre-assumptions.</div>
+          <div class="stat-label">Live Connection Details</div>
+          <div class="stat-value-sub" id="statKeyDetails">Metrics will appear here in real-time as responses arrive from your model.</div>
         </div>
       </div>
     </div>
@@ -284,7 +284,7 @@
     <div class="setting-card">
       <div class="setting-label">
         Local Profile
-        <span>All API keys are securely stored locally on your device in browser localStorage</span>
+        <span>All configurations are stored locally on your device in your browser</span>
       </div>
       <span class="active-badge">Guest Session</span>
     </div>

@@ -1,6 +1,6 @@
 // ══════════════════════════════════════
-//  MyApp — AI Chat & API Key Management
-//  (Dynamic Models & Zero Pre-Assumed Stats)
+//  MyApp — AI Chat & Model Engine
+//  Zero Pre-Assumed Models & Optional Keys
 // ══════════════════════════════════════
 
 // ── DOM Elements ──
@@ -10,9 +10,10 @@ const pages = document.querySelectorAll('.page');
 // Settings Elements
 const themeToggle = document.getElementById('themeToggle');
 const apiProvider = document.getElementById('apiProvider');
+const customEndpointGroup = document.getElementById('customEndpointGroup');
+const customEndpointInput = document.getElementById('customEndpointInput');
+const modelInput = document.getElementById('modelInput');
 const settingsModelSelect = document.getElementById('settingsModelSelect');
-const customModelBox = document.getElementById('customModelBox');
-const customModelInput = document.getElementById('customModelInput');
 const btnFetchModels = document.getElementById('btnFetchModels');
 const apiKeyInput = document.getElementById('apiKeyInput');
 const apiSaveBtn = document.getElementById('apiSaveBtn');
@@ -24,23 +25,23 @@ const btnToggleVisibility = document.getElementById('btnToggleVisibility');
 const eyeIcon = document.getElementById('eyeIcon');
 const activeProviderBadge = document.getElementById('activeProviderBadge');
 
-// Connection Status Box (Settings)
+// Connection Status Box
 const connectionBox = document.getElementById('connectionBox');
 const connectionDot = document.getElementById('connectionDot');
 const connectionTitle = document.getElementById('connectionTitle');
 const connectionDesc = document.getElementById('connectionDesc');
 const connectionBadge = document.getElementById('connectionBadge');
-const savedProvidersChips = document.getElementById('savedProvidersChips');
 
 // Live Metrics Elements
-const statKeyStatus = document.getElementById('statKeyStatus');
 const statActiveModel = document.getElementById('statActiveModel');
+const statProvider = document.getElementById('statProvider');
 const statLatency = document.getElementById('statLatency');
 const statTokens = document.getElementById('statTokens');
 const statKeyDetails = document.getElementById('statKeyDetails');
 
 // Chat Elements
 const chatHeaderDot = document.getElementById('chatHeaderDot');
+const chatModelInput = document.getElementById('chatModelInput');
 const chatModelSelect = document.getElementById('chatModelSelect');
 const btnManageKey = document.getElementById('btnManageKey');
 const chatNewBtn = document.getElementById('chatNewBtn');
@@ -50,80 +51,24 @@ const chatInput = document.getElementById('chatInput');
 const chatSendBtn = document.getElementById('chatSendBtn');
 const suggestionChips = document.querySelectorAll('.suggestion-chip');
 
-// Sidebar Status
+// Sidebar Elements
 const sidebarDot = document.getElementById('sidebarDot');
 const sidebarStatusText = document.getElementById('sidebarStatusText');
 
 
 // ══════════════════════════════════════
-//  Default Models Catalog (fallback)
+//  Live Metrics State (Honest & Clean)
 // ══════════════════════════════════════
 
-const DEFAULT_MODELS = {
-  'Google Gemini': [
-    { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash (Fast & Free Tier)' },
-    { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash (Next-Gen)' },
-    { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro (Deep Reasoning)' },
-    { id: 'gemini-1.5-flash-8b', name: 'Gemini 1.5 Flash-8B (High Throughput)' }
-  ],
-  'OpenRouter': [
-    { id: 'openrouter/auto', name: 'OpenRouter Auto (Best Available)' },
-    { id: 'google/gemini-2.0-flash-exp:free', name: 'Gemini 2.0 Flash Exp (Free)' },
-    { id: 'meta-llama/llama-3.3-70b-instruct:free', name: 'Llama 3.3 70B Instruct (Free)' },
-    { id: 'meta-llama/llama-3.1-8b-instruct:free', name: 'Llama 3.1 8B Instruct (Free)' },
-    { id: 'openai/gpt-4o-mini', name: 'OpenAI GPT-4o Mini' },
-    { id: 'anthropic/claude-3.5-sonnet', name: 'Claude 3.5 Sonnet' }
-  ],
-  'Groq': [
-    { id: 'llama-3.3-70b-versatile', name: 'Llama 3.3 70B Versatile' },
-    { id: 'llama-3.1-8b-instant', name: 'Llama 3.1 8B Instant (Ultra-fast)' },
-    { id: 'mixtral-8x7b-32768', name: 'Mixtral 8x7B' },
-    { id: 'gemma2-9b-it', name: 'Gemma 2 9B' }
-  ],
-  'OpenAI': [
-    { id: 'gpt-4o-mini', name: 'GPT-4o Mini' },
-    { id: 'gpt-4o', name: 'GPT-4o' },
-    { id: 'gpt-4-turbo', name: 'GPT-4 Turbo' },
-    { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo' }
-  ],
-  'Anthropic': [
-    { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet' },
-    { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku' },
-    { id: 'claude-3-haiku-20240307', name: 'Claude 3 Haiku' }
-  ],
-  'Mistral': [
-    { id: 'mistral-small-latest', name: 'Mistral Small' },
-    { id: 'mistral-medium-latest', name: 'Mistral Medium' },
-    { id: 'mistral-large-latest', name: 'Mistral Large' }
-  ],
-  'Cohere': [
-    { id: 'command-r-plus', name: 'Command R+' },
-    { id: 'command-r', name: 'Command R' }
-  ],
-  'Perplexity': [
-    { id: 'sonar', name: 'Sonar' },
-    { id: 'sonar-pro', name: 'Sonar Pro' }
-  ]
-};
-
-const ALL_PROVIDERS = Object.keys(DEFAULT_MODELS);
-
-
-// ══════════════════════════════════════
-//  Live Metrics State (No Pre-assumed stats)
-// ══════════════════════════════════════
-
-let liveSessionMetrics = {
-  keyVerified: false,
-  keyStatusText: 'Not Verified',
+let liveMetrics = {
   lastLatencyMs: null,
-  lastTokensUsed: null,
-  keyDetailsText: 'Connect an API key and send a message to inspect live metrics.'
+  lastTokens: null,
+  details: 'No requests sent yet. Metrics will update in real time.'
 };
 
 
 // ══════════════════════════════════════
-//  Page Navigation & Themes
+//  Navigation & Themes
 // ══════════════════════════════════════
 
 function navigateTo(pageId) {
@@ -136,21 +81,16 @@ function navigateTo(pageId) {
   });
 
   pages.forEach(p => p.classList.remove('active'));
-  const targetPage = document.getElementById('page-' + pageId);
-  if (targetPage) {
-    targetPage.classList.add('active');
-  }
+  const target = document.getElementById('page-' + pageId);
+  if (target) target.classList.add('active');
 
-  if (pageId === 'chat') {
-    chatInput.focus();
-  }
+  if (pageId === 'chat') chatInput.focus();
 }
 
 navLinks.forEach(link => {
   link.addEventListener('click', (e) => {
     e.preventDefault();
-    const target = link.getAttribute('data-page');
-    navigateTo(target);
+    navigateTo(link.getAttribute('data-page'));
   });
 });
 
@@ -160,8 +100,7 @@ btnManageKey.addEventListener('click', () => {
 
 themeToggle.addEventListener('click', () => {
   const html = document.documentElement;
-  const current = html.getAttribute('data-theme');
-  const next = current === 'dark' ? 'light' : 'dark';
+  const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
   html.setAttribute('data-theme', next);
   localStorage.setItem('theme', next);
 });
@@ -173,297 +112,196 @@ if (savedTheme) {
 
 
 // ══════════════════════════════════════
-//  Model & Provider State
+//  Provider & Model State
 // ══════════════════════════════════════
 
-function getActiveProvider() {
-  const active = localStorage.getItem('active_provider');
-  if (active && ALL_PROVIDERS.includes(active)) {
-    return active;
-  }
-  // If not set, check if Google Gemini has a saved key
-  if (localStorage.getItem('apiKey_Google Gemini')) {
-    return 'Google Gemini';
-  }
-  // Otherwise check if any provider has a saved key
-  for (const p of ALL_PROVIDERS) {
-    if (localStorage.getItem('apiKey_' + p)) {
-      return p;
-    }
-  }
-  return 'Google Gemini';
+function getCurrentProvider() {
+  return localStorage.getItem('active_provider') || apiProvider.value || 'Google Gemini';
 }
 
-function setActiveProvider(provider) {
-  localStorage.setItem('active_provider', provider);
-  updateAllStatusIndicators();
+function setCurrentProvider(p) {
+  localStorage.setItem('active_provider', p);
+  updateUI();
 }
 
-function getSelectedModel(provider) {
-  const saved = localStorage.getItem('selected_model_' + provider);
-  if (saved && saved.trim()) {
-    return saved.trim();
+function getModelForProvider(p) {
+  return (localStorage.getItem('model_' + p) || '').trim();
+}
+
+function setModelForProvider(p, m) {
+  if (m !== undefined) {
+    localStorage.setItem('model_' + p, m.trim());
   }
-  const defaultList = DEFAULT_MODELS[provider] || [];
-  return defaultList[0]?.id || '';
+  updateUI();
 }
 
-function setSelectedModel(provider, modelId) {
-  if (modelId) {
-    localStorage.setItem('selected_model_' + provider, modelId);
-  }
-  updateAllStatusIndicators();
+function getKeyForProvider(p) {
+  return (localStorage.getItem('apiKey_' + p) || '').trim();
 }
 
-
-// ══════════════════════════════════════
-//  Populate & Synchronize Model Menus
-// ══════════════════════════════════════
-
-function populateModelMenus(provider, customList = null) {
-  const models = customList || getStoredModelList(provider) || DEFAULT_MODELS[provider] || [];
-  const currentSelected = getSelectedModel(provider);
-
-  // 1. Populate Settings Model Dropdown
-  settingsModelSelect.innerHTML = '';
-  models.forEach(m => {
-    const opt = document.createElement('option');
-    opt.value = m.id;
-    opt.textContent = m.name || m.id;
-    if (m.id === currentSelected) {
-      opt.selected = true;
-    }
-    settingsModelSelect.appendChild(opt);
-  });
-
-  // Custom option
-  const customOpt = document.createElement('option');
-  customOpt.value = '__custom__';
-  customOpt.textContent = '✏️ Custom Model Identifier...';
-  if (!models.some(m => m.id === currentSelected)) {
-    customOpt.selected = true;
-    customModelBox.style.display = 'block';
-    customModelInput.value = currentSelected;
+function setKeyForProvider(p, k) {
+  if (k) {
+    localStorage.setItem('apiKey_' + p, k.trim());
   } else {
-    customModelBox.style.display = 'none';
+    localStorage.removeItem('apiKey_' + p);
   }
-  settingsModelSelect.appendChild(customOpt);
+  updateUI();
+}
 
-  // 2. Populate Chat Header Model Dropdown (for active provider)
-  const active = getActiveProvider();
-  if (provider === active) {
-    chatModelSelect.innerHTML = '';
-    models.forEach(m => {
-      const opt = document.createElement('option');
-      opt.value = m.id;
-      opt.textContent = `${active.replace('Google ', '')}: ${m.name || m.id}`;
-      if (m.id === currentSelected) {
-        opt.selected = true;
-      }
-      chatModelSelect.appendChild(opt);
-    });
+function getEndpointForProvider(p) {
+  if (p === 'Custom / Local (Ollama, LM Studio)') {
+    return localStorage.getItem('endpoint_' + p) || 'http://localhost:11434/v1/chat/completions';
+  }
+  return '';
+}
+
+function setEndpointForProvider(p, ep) {
+  if (ep) {
+    localStorage.setItem('endpoint_' + p, ep.trim());
   }
 }
 
-function getStoredModelList(provider) {
-  const raw = localStorage.getItem('model_list_' + provider);
+
+// ══════════════════════════════════════
+//  UI Synchronization & Indicators
+// ══════════════════════════════════════
+
+function updateUI() {
+  const provider = getCurrentProvider();
+  const model = getModelForProvider(provider);
+  const key = getKeyForProvider(provider);
+  const isCustom = provider === 'Custom / Local (Ollama, LM Studio)';
+
+  // 1. Settings inputs
+  apiProvider.value = provider;
+  modelInput.value = model;
+  apiKeyInput.value = key;
+
+  customEndpointGroup.style.display = isCustom ? 'block' : 'none';
+  if (isCustom) {
+    customEndpointInput.value = getEndpointForProvider(provider);
+  }
+
+  // 2. Chat header inputs
+  chatModelInput.value = model;
+  chatModelInput.placeholder = model ? model : 'Type model name (e.g. any model)...';
+
+  // 3. Status dots & text
+  const isReady = !!model; // Ready if a model is specified (key is optional)
+  if (isReady) {
+    chatHeaderDot.className = 'pulse-dot online';
+    sidebarDot.className = 'status-indicator-dot active';
+    sidebarStatusText.textContent = `${model}`;
+    chatInput.placeholder = `Message ${model}... (Enter to send, Shift+Enter for newline)`;
+  } else {
+    chatHeaderDot.className = 'pulse-dot';
+    sidebarDot.className = 'status-indicator-dot';
+    sidebarStatusText.textContent = 'No Model Set';
+    chatInput.placeholder = 'Type your model name above or in Settings to start chatting...';
+  }
+
+  // 4. Settings Badge & Connection Box
+  activeProviderBadge.textContent = model ? `${provider}: ${model}` : `${provider} (No model set)`;
+
+  if (model) {
+    connectionBox.classList.add('connected');
+    connectionTitle.textContent = `Model Ready: ${model}`;
+    connectionDesc.textContent = key
+      ? `Provider: ${provider} • API Key saved • Ready to chat.`
+      : `Provider: ${provider} • Keyless / Local Mode • Ready to chat.`;
+    connectionBadge.textContent = 'READY';
+  } else {
+    connectionBox.classList.remove('connected');
+    connectionTitle.textContent = 'Model Not Specified';
+    connectionDesc.textContent = 'Type the model name you want to use above. No default models are assumed.';
+    connectionBadge.textContent = 'STANDBY';
+  }
+
+  // 5. Live Metrics Card
+  statActiveModel.textContent = model || 'None';
+  statProvider.textContent = provider;
+  statLatency.textContent = liveMetrics.lastLatencyMs !== null ? `${liveMetrics.lastLatencyMs} ms` : '—';
+  statTokens.textContent = liveMetrics.lastTokens !== null ? `${liveMetrics.lastTokens} tokens` : '—';
+  statKeyDetails.textContent = liveMetrics.details;
+
+  // 6. Update fetched models dropdowns
+  updateModelDropdowns(provider);
+}
+
+function updateModelDropdowns(provider) {
+  const raw = localStorage.getItem('fetched_models_' + provider);
+  let list = [];
   if (raw) {
-    try {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-    } catch (e) {
-      // Ignore parse errors
-    }
+    try { list = JSON.parse(raw); } catch (e) {}
   }
-  return null;
-}
 
-function storeModelList(provider, list) {
-  localStorage.setItem('model_list_' + provider, JSON.stringify(list));
-}
+  if (list && list.length > 0) {
+    settingsModelSelect.style.display = 'block';
+    chatModelSelect.style.display = 'inline-block';
 
+    settingsModelSelect.innerHTML = '<option value="">-- Choose from fetched models --</option>';
+    chatModelSelect.innerHTML = '<option value="">-- Switch model --</option>';
 
-// ══════════════════════════════════════
-//  Model Selection Event Listeners
-// ══════════════════════════════════════
+    list.forEach(m => {
+      const opt1 = document.createElement('option');
+      opt1.value = m;
+      opt1.textContent = m;
+      settingsModelSelect.appendChild(opt1);
 
-settingsModelSelect.addEventListener('change', () => {
-  const provider = apiProvider.value;
-  const val = settingsModelSelect.value;
-  if (val === '__custom__') {
-    customModelBox.style.display = 'block';
-    customModelInput.focus();
+      const opt2 = document.createElement('option');
+      opt2.value = m;
+      opt2.textContent = m;
+      chatModelSelect.appendChild(opt2);
+    });
   } else {
-    customModelBox.style.display = 'none';
-    setSelectedModel(provider, val);
+    settingsModelSelect.style.display = 'none';
+    chatModelSelect.style.display = 'none';
   }
+}
+
+
+// ══════════════════════════════════════
+//  Event Handlers for Inputs & Model Sync
+// ══════════════════════════════════════
+
+// Model input in Settings
+modelInput.addEventListener('input', () => {
+  const p = getCurrentProvider();
+  setModelForProvider(p, modelInput.value);
 });
 
-customModelInput.addEventListener('input', () => {
-  const provider = apiProvider.value;
-  const val = customModelInput.value.trim();
-  if (val) {
-    setSelectedModel(provider, val);
+// Model input in Chat Header
+chatModelInput.addEventListener('input', () => {
+  const p = getCurrentProvider();
+  setModelForProvider(p, chatModelInput.value);
+});
+
+// Dropdowns when a fetched model is chosen
+settingsModelSelect.addEventListener('change', () => {
+  if (settingsModelSelect.value) {
+    const p = getCurrentProvider();
+    setModelForProvider(p, settingsModelSelect.value);
   }
 });
 
 chatModelSelect.addEventListener('change', () => {
-  const active = getActiveProvider();
-  const val = chatModelSelect.value;
-  setSelectedModel(active, val);
-  // Synchronize settings dropdown if viewing same provider
-  if (apiProvider.value === active) {
-    settingsModelSelect.value = val;
+  if (chatModelSelect.value) {
+    const p = getCurrentProvider();
+    setModelForProvider(p, chatModelSelect.value);
   }
 });
 
-
-// ══════════════════════════════════════
-//  Status & Metrics Update (Live, Honest)
-// ══════════════════════════════════════
-
-function updateAllStatusIndicators() {
-  const active = getActiveProvider();
-  const activeKey = localStorage.getItem('apiKey_' + active);
-  const isOnline = !!(activeKey && activeKey.trim());
-  const activeModel = getSelectedModel(active);
-
-  // Update Chat Header Indicator & Select
-  if (isOnline) {
-    chatHeaderDot.className = 'pulse-dot online';
-    chatInput.placeholder = `Message ${active} (${activeModel})... (Enter to send, Shift+Enter for newline)`;
-  } else {
-    chatHeaderDot.className = 'pulse-dot';
-    chatInput.placeholder = `Add an API key in Settings to chat with ${active}...`;
-  }
-
-  // Update Sidebar
-  const shortName = active.replace('Google ', '');
-  if (isOnline) {
-    sidebarDot.className = 'status-indicator-dot active';
-    sidebarStatusText.textContent = `${shortName}: ${activeModel}`;
-  } else {
-    sidebarDot.className = 'status-indicator-dot';
-    sidebarStatusText.textContent = `${shortName} (No Key)`;
-  }
-
-  // Settings active badge
-  activeProviderBadge.textContent = `Active: ${active} (${activeModel})`;
-
-  // Settings Connection Status Box for currently inspected provider
-  const selectedProvider = apiProvider.value;
-  const selectedKey = localStorage.getItem('apiKey_' + selectedProvider) || '';
-  updateConnectionBox(selectedProvider, selectedKey);
-
-  // Update Saved Providers Chips list
-  renderSavedProvidersChips();
-
-  // Update Live Stats Card (Zero pre-assumptions)
-  updateLiveMetricsCard();
-}
-
-function updateConnectionBox(provider, key) {
-  const hasKey = !!(key && key.trim());
-  const isActive = getActiveProvider() === provider;
-  const model = getSelectedModel(provider);
-
-  if (hasKey) {
-    connectionBox.classList.add('connected');
-    connectionTitle.textContent = `${provider}: Connected`;
-    connectionDesc.textContent = isActive
-      ? `Model: ${model} • Ready to chat.`
-      : `Key saved for ${provider}. Click chip below or save to switch to it.`;
-    connectionBadge.textContent = 'ONLINE';
-  } else {
-    connectionBox.classList.remove('connected');
-    connectionTitle.textContent = `${provider}: Not Connected`;
-    connectionDesc.textContent = `No API key detected for ${provider}. Paste your key above and click Save.`;
-    connectionBadge.textContent = 'OFFLINE';
-  }
-}
-
-function updateLiveMetricsCard() {
-  const active = getActiveProvider();
-  const activeKey = localStorage.getItem('apiKey_' + active);
-  const hasKey = !!(activeKey && activeKey.trim());
-  const activeModel = getSelectedModel(active);
-
-  statActiveModel.textContent = activeModel || 'None Selected';
-
-  if (!hasKey) {
-    statKeyStatus.textContent = 'No Key';
-    statKeyStatus.style.color = '#ef4444';
-    statLatency.textContent = '—';
-    statTokens.textContent = '—';
-    statKeyDetails.textContent = `No key configured for ${active}. Enter your key above and test connection to query live status.`;
-    return;
-  }
-
-  statKeyStatus.textContent = liveSessionMetrics.keyStatusText;
-  statKeyStatus.style.color = liveSessionMetrics.keyVerified ? '#22c55e' : 'var(--text)';
-
-  statLatency.textContent = liveSessionMetrics.lastLatencyMs !== null
-    ? `${liveSessionMetrics.lastLatencyMs} ms`
-    : '—';
-
-  statTokens.textContent = liveSessionMetrics.lastTokensUsed !== null
-    ? `${liveSessionMetrics.lastTokensUsed} tokens`
-    : '—';
-
-  statKeyDetails.textContent = liveSessionMetrics.keyDetailsText;
-}
-
-function renderSavedProvidersChips() {
-  savedProvidersChips.innerHTML = '';
-  const active = getActiveProvider();
-  let count = 0;
-
-  ALL_PROVIDERS.forEach(p => {
-    const key = localStorage.getItem('apiKey_' + p);
-    if (key && key.trim()) {
-      count++;
-      const model = getSelectedModel(p);
-      const chip = document.createElement('button');
-      chip.type = 'button';
-      chip.className = 'saved-provider-chip' + (p === active ? ' active' : '');
-      chip.innerHTML = `<span class="chip-dot"></span><span>${p}</span> <span style="opacity:0.7;font-size:0.75rem;">(${model})</span>${p === active ? ' ★' : ''}`;
-      chip.title = `Switch to ${p} (${model})`;
-      chip.addEventListener('click', () => {
-        apiProvider.value = p;
-        loadProviderIntoForm();
-        setActiveProvider(p);
-        apiStatus.textContent = `✓ Switched active provider to ${p}`;
-        apiStatus.className = 'api-key-status success';
-      });
-      savedProvidersChips.appendChild(chip);
-    }
-  });
-
-  if (count === 0) {
-    savedProvidersChips.innerHTML = '<span style="font-size:0.8rem;color:var(--text-muted);">No API keys stored. Select a provider above, paste your key, and click Save.</span>';
-  }
-}
-
-
-// ══════════════════════════════════════
-//  API Key & Provider Management
-// ══════════════════════════════════════
-
-function loadProviderIntoForm() {
-  const provider = apiProvider.value;
-  const savedKey = localStorage.getItem('apiKey_' + provider) || '';
-  apiKeyInput.value = savedKey;
-  apiStatus.textContent = '';
-  apiStatus.className = 'api-key-status';
-
-  populateModelMenus(provider);
-  updateAllStatusIndicators();
-}
-
+// Provider selection dropdown change
 apiProvider.addEventListener('change', () => {
-  loadProviderIntoForm();
+  setCurrentProvider(apiProvider.value);
 });
 
+customEndpointInput.addEventListener('input', () => {
+  const p = getCurrentProvider();
+  setEndpointForProvider(p, customEndpointInput.value);
+});
+
+// Key toggle visibility
 btnToggleVisibility.addEventListener('click', () => {
   if (apiKeyInput.type === 'password') {
     apiKeyInput.type = 'text';
@@ -480,259 +318,166 @@ btnToggleVisibility.addEventListener('click', () => {
   }
 });
 
-// Save Key & Set Active
+// Save Settings Button
 apiSaveBtn.addEventListener('click', () => {
-  const provider = apiProvider.value;
-  const key = apiKeyInput.value.trim();
-
-  if (!key) {
-    localStorage.removeItem('apiKey_' + provider);
-    apiStatus.textContent = `Key removed for ${provider}.`;
-    apiStatus.className = 'api-key-status info';
-  } else {
-    localStorage.setItem('apiKey_' + provider, key);
-    setActiveProvider(provider);
-    apiStatus.textContent = `✓ Key saved! ${provider} is now your active AI provider.`;
-    apiStatus.className = 'api-key-status success';
+  const p = apiProvider.value;
+  setCurrentProvider(p);
+  setModelForProvider(p, modelInput.value);
+  setKeyForProvider(p, apiKeyInput.value);
+  if (p === 'Custom / Local (Ollama, LM Studio)') {
+    setEndpointForProvider(p, customEndpointInput.value);
   }
 
-  updateAllStatusIndicators();
+  apiStatus.textContent = `✓ Settings saved for ${p}. Model: ${modelInput.value || '(none)'}`;
+  apiStatus.className = 'api-key-status success';
 });
 
-// Remove Key for Selected Provider
+// Clear Button for current provider
 apiDeleteBtn.addEventListener('click', () => {
-  const provider = apiProvider.value;
+  const p = getCurrentProvider();
+  modelInput.value = '';
   apiKeyInput.value = '';
-  localStorage.removeItem('apiKey_' + provider);
-  apiStatus.textContent = `Key removed for ${provider}.`;
+  localStorage.removeItem('model_' + p);
+  localStorage.removeItem('apiKey_' + p);
+  localStorage.removeItem('fetched_models_' + p);
+  apiStatus.textContent = `Cleared settings for ${p}.`;
   apiStatus.className = 'api-key-status info';
-  updateAllStatusIndicators();
+  updateUI();
 });
 
-// Clear All Stored Keys (Removes any invalid or leftover keys)
+// Reset All Button
 apiClearAllBtn.addEventListener('click', () => {
-  if (!confirm('Are you sure you want to remove all stored API keys? This clears all saved keys from your browser.')) {
-    return;
-  }
-
-  ALL_PROVIDERS.forEach(p => {
-    localStorage.removeItem('apiKey_' + p);
-    localStorage.removeItem('selected_model_' + p);
-    localStorage.removeItem('model_list_' + p);
-  });
-  localStorage.removeItem('active_provider');
-
-  apiKeyInput.value = '';
-  liveSessionMetrics = {
-    keyVerified: false,
-    keyStatusText: 'Cleared',
+  if (!confirm('Clear all stored models and keys?')) return;
+  localStorage.clear();
+  liveMetrics = {
     lastLatencyMs: null,
-    lastTokensUsed: null,
-    keyDetailsText: 'All stored keys cleared. Ready for fresh setup.'
+    lastTokens: null,
+    details: 'All settings reset. Ready for your model.'
   };
-
-  apiStatus.textContent = '✓ All stored keys and models have been wiped.';
+  apiStatus.textContent = '✓ All stored configurations cleared.';
   apiStatus.className = 'api-key-status info';
-
-  loadProviderIntoForm();
+  updateUI();
 });
 
 
 // ══════════════════════════════════════
-//  Live Model & Key Queries (Asking the API)
+//  Fetch Models from Server/API (Empty by default)
 // ══════════════════════════════════════
 
 btnFetchModels.addEventListener('click', async () => {
-  const provider = apiProvider.value;
-  const key = apiKeyInput.value.trim() || localStorage.getItem('apiKey_' + provider);
-
-  if (!key) {
-    apiStatus.textContent = `Please enter an API key for ${provider} first to fetch live models.`;
-    apiStatus.className = 'api-key-status error';
-    return;
-  }
+  const p = getCurrentProvider();
+  const key = apiKeyInput.value.trim() || getKeyForProvider(p);
+  const customUrl = customEndpointInput.value.trim() || getEndpointForProvider(p);
 
   btnFetchModels.querySelector('span').textContent = 'Fetching...';
-  apiStatus.textContent = `Asking ${provider} API for live model catalog...`;
+  apiStatus.textContent = `Querying ${p} endpoint for models...`;
   apiStatus.className = 'api-key-status info';
 
   try {
-    const models = await fetchLiveModelsFromProvider(provider, key);
-    if (models && models.length > 0) {
-      storeModelList(provider, models);
-      populateModelMenus(provider, models);
-      apiStatus.textContent = `✓ Retrieved ${models.length} live models directly from ${provider}!`;
+    const list = await fetchModelsDirect(p, key, customUrl);
+    if (list && list.length > 0) {
+      localStorage.setItem('fetched_models_' + p, JSON.stringify(list));
+      updateModelDropdowns(p);
+      apiStatus.textContent = `✓ Retrieved ${list.length} models from ${p}. Select one from the dropdown or type your own.`;
       apiStatus.className = 'api-key-status success';
-
-      liveSessionMetrics.keyVerified = true;
-      liveSessionMetrics.keyStatusText = 'Verified Live';
-      liveSessionMetrics.keyDetailsText = `Successfully queried ${provider} API • ${models.length} models accessible.`;
-      updateAllStatusIndicators();
+      liveMetrics.details = `Fetched ${list.length} live models from ${p}.`;
+      updateUI();
     } else {
-      apiStatus.textContent = `Could not fetch live models from ${provider}. Using curated list.`;
-      apiStatus.className = 'api-key-status error';
+      apiStatus.textContent = `No models returned by ${p}. You can type any model name directly.`;
+      apiStatus.className = 'api-key-status info';
     }
   } catch (err) {
-    apiStatus.textContent = `Error querying ${provider}: ${err.message}`;
+    apiStatus.textContent = `Could not fetch models: ${err.message}. You can still type your model name directly.`;
     apiStatus.className = 'api-key-status error';
   } finally {
-    btnFetchModels.querySelector('span').textContent = 'Fetch Live Models';
+    btnFetchModels.querySelector('span').textContent = 'Fetch Models from API';
   }
 });
 
-// Test Connection
-apiTestBtn.addEventListener('click', async () => {
-  const provider = apiProvider.value;
-  const key = apiKeyInput.value.trim() || localStorage.getItem('apiKey_' + provider);
+async function fetchModelsDirect(provider, key, customUrl) {
+  const headers = {};
+  if (key) headers['Authorization'] = 'Bearer ' + key;
 
-  if (!key) {
-    apiStatus.textContent = `Please enter an API key for ${provider} first.`;
-    apiStatus.className = 'api-key-status error';
-    return;
-  }
-
-  apiStatus.textContent = `Querying ${provider} API...`;
-  apiStatus.className = 'api-key-status info';
-
-  const startTime = performance.now();
-  try {
-    const res = await queryKeyLive(provider, key);
-    const latency = Math.round(performance.now() - startTime);
-
-    if (res.ok) {
-      apiStatus.textContent = `✓ Key Verified! Response received in ${latency}ms from ${provider}.`;
-      apiStatus.className = 'api-key-status success';
-
-      localStorage.setItem('apiKey_' + provider, key);
-      setActiveProvider(provider);
-
-      liveSessionMetrics.keyVerified = true;
-      liveSessionMetrics.keyStatusText = 'Verified';
-      liveSessionMetrics.lastLatencyMs = latency;
-      liveSessionMetrics.keyDetailsText = res.details || `Key verified with official ${provider} server in ${latency}ms.`;
-      updateAllStatusIndicators();
-    } else {
-      apiStatus.textContent = `✗ Connection failed: ${res.error}`;
-      apiStatus.className = 'api-key-status error';
-
-      liveSessionMetrics.keyVerified = false;
-      liveSessionMetrics.keyStatusText = 'Invalid Key';
-      liveSessionMetrics.keyDetailsText = `Error returned by ${provider}: ${res.error}`;
-      updateAllStatusIndicators();
-    }
-  } catch (err) {
-    apiStatus.textContent = `✗ Network Error: ${err.message}`;
-    apiStatus.className = 'api-key-status error';
-  }
-});
-
-async function queryKeyLive(provider, key) {
   if (provider === 'Google Gemini') {
-    // Query Google AI Studio API directly
-    const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${key}`;
-    const res = await fetch(url);
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      return { ok: false, error: err.error?.message || `HTTP ${res.status} ${res.statusText}` };
-    }
-    const data = await res.json();
-    const modelCount = data.models?.length || 0;
-    return { ok: true, details: `Google AI Studio key valid • ${modelCount} models available on your Google account.` };
-  }
-
-  if (provider === 'OpenRouter') {
-    const res = await fetch('https://openrouter.ai/api/v1/auth/key', {
-      method: 'GET',
-      headers: { 'Authorization': 'Bearer ' + key }
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      return { ok: false, error: err.error?.message || `HTTP ${res.status}` };
-    }
-    const data = await res.json();
-    const info = data.data || {};
-    const usage = info.usage !== undefined ? `$${info.usage.toFixed(4)}` : 'N/A';
-    const limit = info.limit !== undefined ? (info.limit ? `$${info.limit}` : 'Unlimited') : 'Free Tier';
-    return { ok: true, details: `OpenRouter Key: ${info.label || 'Active'} • Usage: ${usage} • Limit: ${limit}` };
-  }
-
-  if (provider === 'Groq') {
-    const res = await fetch('https://api.groq.com/openai/v1/models', {
-      headers: { 'Authorization': 'Bearer ' + key }
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      return { ok: false, error: err.error?.message || `HTTP ${res.status}` };
-    }
-    const data = await res.json();
-    return { ok: true, details: `Groq key authenticated • ${data.data?.length || 0} models ready.` };
-  }
-
-  if (provider === 'OpenAI') {
-    const res = await fetch('https://api.openai.com/v1/models', {
-      headers: { 'Authorization': 'Bearer ' + key }
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      return { ok: false, error: err.error?.message || `HTTP ${res.status}` };
-    }
-    const data = await res.json();
-    return { ok: true, details: `OpenAI key authenticated • ${data.data?.length || 0} models accessible.` };
-  }
-
-  // Fallback
-  return { ok: true, details: `Key saved for ${provider}.` };
-}
-
-async function fetchLiveModelsFromProvider(provider, key) {
-  if (provider === 'Google Gemini') {
+    if (!key) throw new Error('API key is required to query Google Gemini models list');
     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
     if (!res.ok) throw new Error(`Google returned status ${res.status}`);
     const data = await res.json();
     return (data.models || [])
       .filter(m => m.supportedGenerationMethods?.includes('generateContent'))
-      .map(m => {
-        const id = m.name.replace('models/', '');
-        return { id: id, name: m.displayName ? `${m.displayName} (${id})` : id };
-      });
+      .map(m => m.name.replace('models/', ''));
   }
 
   if (provider === 'OpenRouter') {
-    const res = await fetch('https://openrouter.ai/api/v1/models');
-    if (!res.ok) throw new Error(`OpenRouter returned status ${res.status}`);
+    const res = await fetch('https://openrouter.ai/api/v1/models', { headers });
+    if (!res.ok) throw new Error(`Status ${res.status}`);
     const data = await res.json();
-    return (data.data || []).slice(0, 30).map(m => ({
-      id: m.id,
-      name: `${m.name || m.id}`
-    }));
+    return (data.data || []).map(m => m.id);
   }
 
   if (provider === 'Groq') {
-    const res = await fetch('https://api.groq.com/openai/v1/models', {
-      headers: { 'Authorization': 'Bearer ' + key }
-    });
-    if (!res.ok) throw new Error(`Groq returned status ${res.status}`);
+    const res = await fetch('https://api.groq.com/openai/v1/models', { headers });
+    if (!res.ok) throw new Error(`Status ${res.status}`);
     const data = await res.json();
-    return (data.data || []).map(m => ({ id: m.id, name: m.id }));
+    return (data.data || []).map(m => m.id);
   }
 
   if (provider === 'OpenAI') {
-    const res = await fetch('https://api.openai.com/v1/models', {
-      headers: { 'Authorization': 'Bearer ' + key }
-    });
-    if (!res.ok) throw new Error(`OpenAI returned status ${res.status}`);
+    const res = await fetch('https://api.openai.com/v1/models', { headers });
+    if (!res.ok) throw new Error(`Status ${res.status}`);
     const data = await res.json();
-    return (data.data || [])
-      .filter(m => m.id.includes('gpt'))
-      .map(m => ({ id: m.id, name: m.id }));
+    return (data.data || []).map(m => m.id);
   }
 
-  return DEFAULT_MODELS[provider] || [];
+  if (provider === 'Custom / Local (Ollama, LM Studio)') {
+    const url = customUrl.replace('/chat/completions', '/models').replace('/v1/completions', '/v1/models');
+    const res = await fetch(url, { headers });
+    if (!res.ok) throw new Error(`Local endpoint returned status ${res.status}`);
+    const data = await res.json();
+    return (data.data || data.models || []).map(m => m.id || m.name || m);
+  }
+
+  return [];
 }
+
+// Test Connection
+apiTestBtn.addEventListener('click', async () => {
+  const p = getCurrentProvider();
+  const m = modelInput.value.trim() || getModelForProvider(p);
+  const key = apiKeyInput.value.trim() || getKeyForProvider(p);
+
+  if (!m) {
+    apiStatus.textContent = 'Please type a model name first to test.';
+    apiStatus.className = 'api-key-status error';
+    return;
+  }
+
+  apiStatus.textContent = `Testing request to ${p} (${m})...`;
+  apiStatus.className = 'api-key-status info';
+
+  const t0 = performance.now();
+  try {
+    const res = await executeModelCall(p, m, key, [{ role: 'user', content: 'hi' }]);
+    const latency = Math.round(performance.now() - t0);
+
+    apiStatus.textContent = `✓ Response received in ${latency}ms from ${m}!`;
+    apiStatus.className = 'api-key-status success';
+
+    liveMetrics.lastLatencyMs = latency;
+    liveMetrics.lastTokens = res.tokens;
+    liveMetrics.details = `Tested successfully with ${m} in ${latency}ms.`;
+    updateUI();
+  } catch (err) {
+    apiStatus.textContent = `✗ Error: ${err.message}`;
+    apiStatus.className = 'api-key-status error';
+    liveMetrics.details = `Test failed: ${err.message}`;
+    updateUI();
+  }
+});
 
 
 // ══════════════════════════════════════
-//  Chat Core Logic & API Execution
+//  Chat Core Logic
 // ══════════════════════════════════════
 
 let conversationHistory = [];
@@ -777,6 +522,15 @@ function sendMessage() {
   const text = chatInput.value.trim();
   if (!text) return;
 
+  const p = getCurrentProvider();
+  const m = getModelForProvider(p);
+
+  if (!m) {
+    alert('Please enter or type the model name you want to use in the header above or in Settings.');
+    chatModelInput.focus();
+    return;
+  }
+
   chatWelcome.classList.add('hidden');
   chatMessages.classList.add('visible');
 
@@ -786,12 +540,43 @@ function sendMessage() {
   chatInput.value = '';
   chatInput.style.height = 'auto';
 
-  callActiveAI();
+  runChatQuery(p, m);
 }
 
-// ── Provider Real-Time Call Handlers ──
-const PROVIDER_API_CALLS = {
-  'Google Gemini': async (key, model, history) => {
+async function runChatQuery(provider, model) {
+  const key = getKeyForProvider(provider);
+  const typingEl = showTypingIndicator(provider, model);
+  const t0 = performance.now();
+
+  try {
+    const result = await executeModelCall(provider, model, key, conversationHistory);
+    const latency = Math.round(performance.now() - t0);
+
+    liveMetrics.lastLatencyMs = latency;
+    liveMetrics.lastTokens = result.tokens;
+    liveMetrics.details = `Last response: ${latency}ms from model ${model}.`;
+    updateUI();
+
+    typingEl.remove();
+    appendMessage('ai', result.reply, provider, model);
+    conversationHistory.push({ role: 'assistant', content: result.reply });
+
+  } catch (err) {
+    typingEl.remove();
+    appendMessage(
+      'ai',
+      `❌ **Error from ${model}:**\n\n${err.message}\n\n*Check your model name, endpoint, or optional key in [Settings].*`,
+      provider,
+      model
+    );
+  }
+}
+
+// ── Generic Model Call Execution (Adapts to any model user brings) ──
+async function executeModelCall(provider, model, key, history) {
+  // 1. Google Gemini format
+  if (provider === 'Google Gemini') {
+    if (!key) throw new Error('Google Gemini requires an API key. Please add it in Settings.');
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
     const payload = {
       contents: history.map(m => ({
@@ -799,106 +584,24 @@ const PROVIDER_API_CALLS = {
         parts: [{ text: m.content }]
       }))
     };
-
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err.error?.message || `Google Gemini API returned status ${res.status}`);
+      throw new Error(err.error?.message || `Google returned status ${res.status}`);
     }
-
     const data = await res.json();
     const reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!reply) {
-      throw new Error('Gemini response was empty or blocked by safety filters.');
-    }
+    if (!reply) throw new Error('Response was empty or filtered.');
+    return { reply, tokens: data.usageMetadata?.totalTokenCount || null };
+  }
 
-    const tokens = data.usageMetadata?.totalTokenCount || null;
-    return { reply, tokens };
-  },
-
-  'OpenRouter': async (key, model, history) => {
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + key,
-        'HTTP-Referer': window.location.href,
-        'X-Title': 'MyApp'
-      },
-      body: JSON.stringify({
-        model: model,
-        messages: history
-      })
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error?.message || `OpenRouter returned status ${res.status}`);
-    }
-
-    const data = await res.json();
-    return {
-      reply: data.choices?.[0]?.message?.content || 'No response returned.',
-      tokens: data.usage?.total_tokens || null
-    };
-  },
-
-  'Groq': async (key, model, history) => {
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + key
-      },
-      body: JSON.stringify({
-        model: model,
-        messages: history
-      })
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error?.message || `Groq returned status ${res.status}`);
-    }
-
-    const data = await res.json();
-    return {
-      reply: data.choices?.[0]?.message?.content || 'No response returned.',
-      tokens: data.usage?.total_tokens || null
-    };
-  },
-
-  'OpenAI': async (key, model, history) => {
-    const res = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + key
-      },
-      body: JSON.stringify({
-        model: model,
-        messages: history
-      })
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error?.message || `OpenAI returned status ${res.status}`);
-    }
-
-    const data = await res.json();
-    return {
-      reply: data.choices?.[0]?.message?.content || 'No response returned.',
-      tokens: data.usage?.total_tokens || null
-    };
-  },
-
-  'Anthropic': async (key, model, history) => {
+  // 2. Anthropic format
+  if (provider === 'Anthropic') {
+    if (!key) throw new Error('Anthropic requires an API key.');
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -913,144 +616,60 @@ const PROVIDER_API_CALLS = {
         messages: history
       })
     });
-
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.error?.message || `Anthropic returned status ${res.status}`);
     }
-
     const data = await res.json();
     return {
-      reply: data.content?.[0]?.text || 'No response returned.',
+      reply: data.content?.[0]?.text || '',
       tokens: (data.usage?.input_tokens || 0) + (data.usage?.output_tokens || 0)
     };
-  },
-
-  'Mistral': async (key, model, history) => {
-    const res = await fetch('https://api.mistral.ai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + key
-      },
-      body: JSON.stringify({
-        model: model,
-        messages: history
-      })
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error?.message || `Mistral returned status ${res.status}`);
-    }
-
-    const data = await res.json();
-    return {
-      reply: data.choices?.[0]?.message?.content || 'No response returned.',
-      tokens: data.usage?.total_tokens || null
-    };
-  },
-
-  'Cohere': async (key, model, history) => {
-    const res = await fetch('https://api.cohere.ai/v2/chat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + key
-      },
-      body: JSON.stringify({
-        model: model,
-        messages: history
-      })
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error?.message || `Cohere returned status ${res.status}`);
-    }
-
-    const data = await res.json();
-    return {
-      reply: data.message?.content?.[0]?.text || 'No response returned.',
-      tokens: data.usage?.tokens?.total_tokens || null
-    };
-  },
-
-  'Perplexity': async (key, model, history) => {
-    const res = await fetch('https://api.perplexity.ai/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + key
-      },
-      body: JSON.stringify({
-        model: model,
-        messages: history
-      })
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error?.message || `Perplexity returned status ${res.status}`);
-    }
-
-    const data = await res.json();
-    return {
-      reply: data.choices?.[0]?.message?.content || 'No response returned.',
-      tokens: data.usage?.total_tokens || null
-    };
-  }
-};
-
-async function callActiveAI() {
-  const active = getActiveProvider();
-  const apiKey = localStorage.getItem('apiKey_' + active);
-  const activeModel = getSelectedModel(active);
-
-  if (!apiKey || !apiKey.trim()) {
-    appendMessage(
-      'ai',
-      `⚠️ **No API Key detected for ${active}**\n\nTo chat, open **Settings**, paste your API key, and click **Save & Set Active**.\n\n*(Google Gemini provides a free tier at Google AI Studio)*`,
-      active,
-      activeModel
-    );
-    return;
   }
 
-  const typingEl = showTypingIndicator(active, activeModel);
-  const startTime = performance.now();
-
-  try {
-    const runner = PROVIDER_API_CALLS[active];
-    if (!runner) {
-      throw new Error(`No execution handler for provider: ${active}`);
-    }
-
-    const result = await runner(apiKey.trim(), activeModel, conversationHistory);
-    const latency = Math.round(performance.now() - startTime);
-
-    // Update real session metrics
-    liveSessionMetrics.keyVerified = true;
-    liveSessionMetrics.keyStatusText = 'Live & Healthy';
-    liveSessionMetrics.lastLatencyMs = latency;
-    liveSessionMetrics.lastTokensUsed = result.tokens;
-    liveSessionMetrics.keyDetailsText = `Last response received in ${latency}ms from model ${activeModel}. Tokens: ${result.tokens || 'N/A'}.`;
-    updateLiveMetricsCard();
-
-    typingEl.remove();
-    appendMessage('ai', result.reply, active, activeModel);
-    conversationHistory.push({ role: 'assistant', content: result.reply });
-
-  } catch (err) {
-    typingEl.remove();
-    appendMessage(
-      'ai',
-      `❌ **Error from ${active} (${activeModel}):**\n\n${err.message}\n\n*Check your API key or model selection in [Settings].*`,
-      active,
-      activeModel
-    );
+  // 3. OpenAI-Compatible Format (OpenAI, OpenRouter, Groq, Mistral, Perplexity, Local / Ollama)
+  let endpoint = 'https://api.openai.com/v1/chat/completions';
+  if (provider === 'OpenRouter') endpoint = 'https://openrouter.ai/api/v1/chat/completions';
+  if (provider === 'Groq') endpoint = 'https://api.groq.com/openai/v1/chat/completions';
+  if (provider === 'Mistral') endpoint = 'https://api.mistral.ai/v1/chat/completions';
+  if (provider === 'Perplexity') endpoint = 'https://api.perplexity.ai/chat/completions';
+  if (provider === 'Cohere') endpoint = 'https://api.cohere.ai/v2/chat';
+  if (provider === 'Custom / Local (Ollama, LM Studio)') {
+    endpoint = getEndpointForProvider(provider) || 'http://localhost:11434/v1/chat/completions';
   }
+
+  const headers = { 'Content-Type': 'application/json' };
+  if (key) {
+    headers['Authorization'] = 'Bearer ' + key;
+  }
+  if (provider === 'OpenRouter') {
+    headers['HTTP-Referer'] = window.location.href;
+    headers['X-Title'] = 'MyApp';
+  }
+
+  const bodyPayload = { model: model, messages: history };
+
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: headers,
+    body: JSON.stringify(bodyPayload)
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error?.message || err.message || `Server returned status ${res.status}`);
+  }
+
+  const data = await res.json();
+  const reply = data.choices?.[0]?.message?.content || data.message?.content?.[0]?.text || 'No text returned.';
+  const tokens = data.usage?.total_tokens || null;
+  return { reply, tokens };
 }
+
+
+// ══════════════════════════════════════
+//  Message Rendering & Helpers
+// ══════════════════════════════════════
 
 function showTypingIndicator(providerName, modelName) {
   const typingMsg = document.createElement('div');
@@ -1061,8 +680,8 @@ function showTypingIndicator(providerName, modelName) {
     </div>
     <div class="message-body">
       <div class="message-role">
-        <span>${providerName}</span>
-        <span class="model-tag">${modelName}</span>
+        <span>${modelName}</span>
+        <span class="model-tag">Generating...</span>
       </div>
       <div class="typing-indicator">
         <div class="dot"></div>
@@ -1086,7 +705,7 @@ function appendMessage(role, content, providerName = 'MyApp', modelName = '') {
 
   const roleLabel = role === 'user'
     ? '<span>You</span>'
-    : `<span>${providerName}</span>${modelName ? `<span class="model-tag">${modelName}</span>` : ''}`;
+    : `<span>${modelName || providerName}</span>`;
 
   const formatted = formatMarkdown(content);
 
@@ -1104,25 +723,11 @@ function appendMessage(role, content, providerName = 'MyApp', modelName = '') {
 
 function formatMarkdown(text) {
   let html = escapeHTML(text);
-
-  // Fenced code blocks ```code```
   html = html.replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
-
-  // Inline code `code`
   html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
-
-  // Bold **text**
   html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-
-  // Italics *text*
   html = html.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>');
-
-  // Double newlines to paragraphs
-  html = html
-    .split('\n\n')
-    .map(p => '<p>' + p.replace(/\n/g, '<br>') + '</p>')
-    .join('');
-
+  html = html.split('\n\n').map(p => '<p>' + p.replace(/\n/g, '<br>') + '</p>').join('');
   return html;
 }
 
@@ -1140,10 +745,7 @@ function escapeHTML(str) {
 
 
 // ══════════════════════════════════════
-//  Initialization
+//  Initial Load (Empty by default)
 // ══════════════════════════════════════
 
-const initialActive = getActiveProvider();
-apiProvider.value = initialActive;
-loadProviderIntoForm();
-updateAllStatusIndicators();
+updateUI();

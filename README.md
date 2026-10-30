@@ -1,6 +1,6 @@
-# MyApp — Project Documentation
+# MyApp — AI Chat Engine
 
-> An AI assistant web application with a ChatGPT / Perplexity-style interface, dynamic model selection, live API connection metrics, and multi-provider AI support. Built with vanilla HTML, CSS, and JS (zero frameworks).
+> A lightweight, static AI chat web application with zero pre-assumed models, optional API keys, and real-time response metrics. Built with vanilla HTML, CSS, and JS (zero frameworks).
 
 ---
 
@@ -8,39 +8,37 @@
 
 ```
 website/
-├── index.html    ← Main application HTML (SPA page structure)
-├── style.css     ← Modern theme tokens, ChatGPT/Perplexity layout, animations, badges
-├── script.js     ← SPA navigation, live API calls, dynamic model menus, real-time metrics
+├── index.html    ← Main application HTML (SPA structure)
+├── style.css     ← Modern theme tokens, ChatGPT/Perplexity layout, dark/light modes
+├── script.js     ← Multi-provider router, zero-assumption model engine, live metrics
 └── README.md     ← Documentation & usage guide
 ```
 
 ---
 
-## Key Features
+## Design Principles
 
-### 1. Model Selection Menu
-- **In Chat Header**: Interactive model dropdown directly at the top of the chat area (like ChatGPT / Perplexity). Easily switch between models on the fly.
-- **In Settings**: Dropdown with curated models per provider, custom model ID input, and a **"Fetch Live Models"** button that queries the provider's API directly for your key's accessible models.
-- **Dynamic Routing**: The chosen model is stored per provider and passed to each API request.
+### 1. Bring Your Own Model (Empty by Default)
+- **No Hardcoded Models**: The application does not assume or hardcode any default models. You can bring any model you want.
+- **Type Any Model Directly**: Enter your model identifier directly in the Chat header input or in Settings (e.g. `llama3`, `gemini-1.5-flash`, `gpt-4o`, `deepseek-r1`, or custom fine-tunes).
+- **Fetch Live Models (Optional)**: If you connect an API key or local endpoint, clicking **"Fetch Models from API"** asks the server directly for the live model list permitted on your account.
 
-### 2. Live Honest Metrics (Zero Pre-Assumed Stats)
-- **No Hardcoded Numbers**: Removed all fake/pre-assumed RPM, TPM, and daily quota tables.
-- **Query the Key Directly**:
-  - For Google Gemini: queries `https://generativelanguage.googleapis.com/v1beta/models?key=...` to verify the key and list accessible models.
-  - For OpenRouter: queries `https://openrouter.ai/api/v1/auth/key` to fetch live account usage, limits, and rate limits.
-  - For Groq / OpenAI: queries `/v1/models` for active account status.
-- **Real-Time Session Metrics**: Tracks actual latency (<kbd>ms</kbd>) and tokens returned directly from API responses (`usageMetadata` / `usage`).
+### 2. API Keys are 100% Optional
+- **Keyless / Local Mode**: Works without an API key for local inference servers like **Ollama** (`http://localhost:11434/v1`), **LM Studio** (`http://localhost:1234/v1`), LocalAI, or open proxies.
+- **Hosted Cloud Providers**: Supports **Google Gemini**, **OpenRouter**, **Groq**, **OpenAI**, **Anthropic**, **Mistral**, **Cohere**, and **Perplexity** whenever you provide a key.
 
-### 3. Key Cleanup & Security
-- **Clear All Keys**: One-click **"Clear All Keys"** button in Settings to completely wipe invalid or stale keys from `localStorage` and start fresh.
-- **Remove Single Key**: Remove key for any individual provider.
-- **Password Visibility Toggle**: Inspect pasted keys to verify there are no hidden whitespaces.
+### 3. Zero Pre-Assumed Stats
+- **No Fake Rate Tables**: Removed all static/pre-assumed RPM, TPM, and quota tables.
+- **Live Response Metrics**:
+  - Round-trip latency in milliseconds (<kbd>ms</kbd>).
+  - Tokens returned directly from actual API response payloads.
+  - Live server connection confirmation.
 
 ### 4. Chat Interface
-- **Top Header Bar**: Displays the active provider and model with a live status indicator.
-- **Suggestion Chips**: Prompt ideas on the welcome screen to kick off conversations with one click.
+- **Top Header Bar**: Type or switch your model directly at the top of the chat.
+- **Welcome Screen**: Clean interface with quick prompt ideas.
 - **"New Chat" Button**: Clears the conversation history and resets the view.
-- **Markdown & Code Rendering**: User and AI message bubbles with syntax-highlighted code blocks, bold, italics, and avatars.
+- **Markdown & Code Rendering**: Message bubbles with formatted code blocks, bold, italics, and avatars.
 - **Auto-expanding Input**: Textarea grows dynamically with multiline input; <kbd>Enter</kbd> sends and <kbd>Shift</kbd>+<kbd>Enter</kbd> inserts a newline.
 
 ---

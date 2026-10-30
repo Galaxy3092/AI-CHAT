@@ -3,48 +3,103 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Website</title>
+  <title>MyApp — AI Assistant</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
+  <!-- Left Sidebar -->
   <aside class="sidebar">
-    <div class="logo">MyApp</div>
+    <div class="logo">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+      </svg>
+      <span>MyApp</span>
+    </div>
+
     <nav>
-      <a href="#" data-page="chat" class="active">
+      <a href="#" data-page="chat" class="active" id="navChat">
         <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        Chats
+        <span>Chats</span>
       </a>
     </nav>
+
     <div class="sidebar-bottom">
+      <!-- Mini provider status in sidebar footer -->
+      <div class="sidebar-status" id="sidebarStatus" title="Active AI Provider">
+        <span class="status-indicator-dot" id="sidebarDot"></span>
+        <span class="sidebar-status-text" id="sidebarStatusText">Gemini (No Key)</span>
+      </div>
+
       <nav>
-        <a href="#" data-page="settings">
+        <a href="#" data-page="settings" id="navSettings">
           <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-          Settings
+          <span>Settings</span>
         </a>
         <a href="#" data-page="account">
           <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          Account
+          <span>Account</span>
         </a>
       </nav>
     </div>
   </aside>
 
-  <!-- Chat page -->
+  <!-- Chat Page -->
   <main class="page page-chat active" id="page-chat">
+
+    <!-- Chat Header Top Bar -->
+    <header class="chat-header">
+      <div class="chat-header-left">
+        <!-- Active Model Pill / Indicator -->
+        <button class="chat-model-pill" id="chatModelPill" title="Click to manage API key in Settings">
+          <span class="pulse-dot" id="chatHeaderDot"></span>
+          <span class="model-name" id="chatHeaderModelName">Google Gemini</span>
+          <span class="model-status-badge" id="chatHeaderBadge">Ready</span>
+        </button>
+      </div>
+
+      <div class="chat-header-right">
+        <button type="button" class="btn-header-action" id="chatNewBtn" title="Start a fresh conversation">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+          <span>New Chat</span>
+        </button>
+      </div>
+    </header>
 
     <!-- Welcome screen (shown when no messages) -->
     <div class="chat-welcome" id="chatWelcome">
       <div class="welcome-icon">
-        <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.2">
+        <svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="currentColor" stroke-width="1.3">
           <path d="M12 2a10 10 0 0 1 10 10c0 5.523-4.477 10-10 10a10.003 10.003 0 0 1-9.378-6.5L2 22l3.5-.622A10 10 0 0 1 12 2z"/>
-          <circle cx="8" cy="12" r="1" fill="currentColor" stroke="none"/>
-          <circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/>
-          <circle cx="16" cy="12" r="1" fill="currentColor" stroke="none"/>
+          <circle cx="8" cy="12" r="1.2" fill="currentColor" stroke="none"/>
+          <circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/>
+          <circle cx="16" cy="12" r="1.2" fill="currentColor" stroke="none"/>
         </svg>
       </div>
-      <h1>What can I help you with?</h1>
-      <p class="welcome-sub">Ask me anything — I'm here to help.</p>
+      <h1 id="welcomeTitle">What can I help you with?</h1>
+      <p class="welcome-sub" id="welcomeSub">Powered by your connected AI API key.</p>
+
+      <!-- Suggestion chips (Perplexity / ChatGPT style) -->
+      <div class="chat-suggestions">
+        <button class="suggestion-chip" data-prompt="Explain quantum computing in simple terms">
+          <span class="chip-icon">⚛️</span>
+          <span>Explain quantum computing simply</span>
+        </button>
+        <button class="suggestion-chip" data-prompt="Write a clean Python function to scrape and parse JSON from a REST API">
+          <span class="chip-icon">💻</span>
+          <span>Write a clean Python REST script</span>
+        </button>
+        <button class="suggestion-chip" data-prompt="Give me 5 creative ideas for a high-impact web application">
+          <span class="chip-icon">💡</span>
+          <span>5 creative app ideas</span>
+        </button>
+        <button class="suggestion-chip" data-prompt="Summarize the key differences between Gemini, GPT-4, and Claude">
+          <span class="chip-icon">⚡</span>
+          <span>Compare Gemini, GPT-4 & Claude</span>
+        </button>
+      </div>
     </div>
 
     <!-- Messages area (hidden until first message) -->
@@ -53,16 +108,18 @@
     <!-- Input area (always at bottom) -->
     <div class="chat-input-area">
       <div class="chat-input-wrapper">
-        <textarea id="chatInput" placeholder="Message MyApp..." rows="1"></textarea>
-        <button type="button" id="chatSendBtn" aria-label="Send">
+        <textarea id="chatInput" placeholder="Message Google Gemini... (Enter to send, Shift+Enter for newline)" rows="1"></textarea>
+        <button type="button" id="chatSendBtn" aria-label="Send message" title="Send message">
           <svg viewBox="0 0 24 24"><path d="M3.478 2.405a.75.75 0 0 0-.926.94l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94l18.5-8.25a.75.75 0 0 0 0-1.39l-18.5-8.55Z"/></svg>
         </button>
       </div>
-      <div class="chat-input-footer">MyApp can make mistakes. Check important info.</div>
+      <div class="chat-input-footer" id="chatInputFooter">
+        MyApp connects directly to your provider's official API. Responses are generated in real-time.
+      </div>
     </div>
   </main>
 
-  <!-- Settings page -->
+  <!-- Settings Page -->
   <div class="page page-settings" id="page-settings">
     <h2>Settings</h2>
 
@@ -80,129 +137,166 @@
       </button>
     </div>
 
-    <!-- AI API Key -->
+    <!-- AI API Key Management Card -->
     <div class="api-key-card">
       <div class="card-header">
-        AI API Key
-        <span>Connect your preferred AI provider</span>
+        <div class="card-header-title">
+          <span>AI API Configuration</span>
+          <span class="active-badge" id="activeProviderBadge">Active: Google Gemini</span>
+        </div>
+        <span>Select your provider, paste your key, and test the connection</span>
       </div>
+
       <div class="api-key-form">
+        <label class="form-label" for="apiProvider">Select AI Provider:</label>
         <select id="apiProvider">
-          <option value="OpenRouter">OpenRouter</option>
-          <option value="OpenAI">OpenAI</option>
-          <option value="Anthropic">Anthropic</option>
-          <option value="Google Gemini">Google Gemini</option>
-          <option value="Mistral">Mistral</option>
+          <option value="Google Gemini" selected>Google Gemini (Free tier available)</option>
+          <option value="OpenRouter">OpenRouter (Access all models)</option>
+          <option value="OpenAI">OpenAI (ChatGPT)</option>
+          <option value="Anthropic">Anthropic (Claude)</option>
+          <option value="Groq">Groq (Ultra-fast inference)</option>
+          <option value="Mistral">Mistral AI</option>
           <option value="Cohere">Cohere</option>
-          <option value="Groq">Groq</option>
           <option value="Perplexity">Perplexity</option>
         </select>
+
+        <label class="form-label" for="apiKeyInput">API Key:</label>
         <div class="input-row">
-          <input type="password" id="apiKeyInput" placeholder="Paste your API key..." />
-          <button class="btn-save" id="apiSaveBtn">Save</button>
+          <div class="password-input-wrapper">
+            <input type="password" id="apiKeyInput" placeholder="Paste your API key here..." autocomplete="off" />
+            <button type="button" class="btn-toggle-visibility" id="btnToggleVisibility" title="Show/Hide API key">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" id="eyeIcon">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
         </div>
+
+        <div class="btn-actions-row">
+          <button type="button" class="btn-save" id="apiSaveBtn">Save & Set Active</button>
+          <button type="button" class="btn-test" id="apiTestBtn" title="Test if this API key works">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="5 3 19 12 5 21 5 3"/>
+            </svg>
+            Test Connection
+          </button>
+          <button type="button" class="btn-delete" id="apiDeleteBtn" title="Remove this key">Remove</button>
+        </div>
+
         <div class="api-key-status" id="apiStatus"></div>
       </div>
     </div>
 
-    <!-- Connection status box -->
+    <!-- Prominent Connection Status Box -->
     <div class="connection-box" id="connectionBox">
       <div class="connection-box-left">
         <div class="connection-dot" id="connectionDot"></div>
         <div class="connection-info">
-          <div class="connection-title" id="connectionTitle">Not connected</div>
-          <div class="connection-desc" id="connectionDesc">No API key saved for this provider</div>
+          <div class="connection-title" id="connectionTitle">Google Gemini: Not Connected</div>
+          <div class="connection-desc" id="connectionDesc">No API key detected for Google Gemini. Paste key above and click Save.</div>
         </div>
       </div>
       <div class="connection-badge" id="connectionBadge">Offline</div>
     </div>
 
-    <!-- API limits info bar -->
-    <div class="api-limits-bar" id="apiLimitsBar">
-      <div class="api-limits-icon">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="12" y1="8" x2="12" y2="12"/>
-          <line x1="12" y1="16" x2="12.01" y2="16"/>
-        </svg>
+    <!-- Saved Providers Quick-Switch Bar -->
+    <div class="saved-providers-card" id="savedProvidersCard">
+      <div class="saved-card-header">
+        <span>Detected Keys Across Providers</span>
+        <span class="subtext">Click any detected provider to set as Active</span>
       </div>
-      <div class="api-limits-content">
-        <div class="api-limits-title" id="apiLimitsTitle">No API key connected</div>
-        <div class="api-limits-detail" id="apiLimitsDetail">Add an API key above to start chatting with AI.</div>
+      <div class="saved-providers-chips" id="savedProvidersChips">
+        <!-- Rendered dynamically via JS -->
       </div>
-      <div class="api-limits-badge" id="apiLimitsBadge">Inactive</div>
     </div>
 
     <!-- Provider limits reference -->
     <div class="limits-table-card">
-      <div class="limits-table-header">Rate limits by provider <span>(free tier)</span></div>
+      <div class="limits-table-header">Rate limits by provider <span>(Free tier overview)</span></div>
       <table class="limits-table">
         <thead>
           <tr>
             <th>Provider</th>
             <th>RPM</th>
             <th>TPM</th>
-            <th>Daily limit</th>
+            <th>Daily Limit</th>
+            <th>Best Free Model</th>
           </tr>
         </thead>
         <tbody>
+          <tr data-provider="Google Gemini">
+            <td><strong>Google Gemini</strong></td>
+            <td>15</td>
+            <td>1,000,000</td>
+            <td>1,500 req/day</td>
+            <td>gemini-1.5-flash</td>
+          </tr>
           <tr data-provider="OpenRouter">
-            <td>OpenRouter</td>
+            <td><strong>OpenRouter</strong></td>
             <td>20</td>
             <td>Varies</td>
-            <td>200 req</td>
+            <td>200 req/day</td>
+            <td>free router / auto</td>
+          </tr>
+          <tr data-provider="Groq">
+            <td><strong>Groq</strong></td>
+            <td>30</td>
+            <td>15,000</td>
+            <td>14,400 req/day</td>
+            <td>llama-3.1-8b</td>
           </tr>
           <tr data-provider="OpenAI">
-            <td>OpenAI</td>
+            <td><strong>OpenAI</strong></td>
             <td>3</td>
             <td>40,000</td>
             <td>200 req</td>
+            <td>gpt-3.5-turbo</td>
           </tr>
           <tr data-provider="Anthropic">
-            <td>Anthropic</td>
+            <td><strong>Anthropic</strong></td>
             <td>5</td>
             <td>20,000</td>
             <td>1,000 req</td>
-          </tr>
-          <tr data-provider="Google Gemini">
-            <td>Google Gemini</td>
-            <td>15</td>
-            <td>1,000,000</td>
-            <td>1,500 req</td>
+            <td>claude-3-haiku</td>
           </tr>
           <tr data-provider="Mistral">
-            <td>Mistral</td>
+            <td><strong>Mistral</strong></td>
             <td>1</td>
             <td>500,000</td>
-            <td>—</td>
+            <td>Pay-as-you-go</td>
+            <td>mistral-small</td>
           </tr>
           <tr data-provider="Cohere">
-            <td>Cohere</td>
+            <td><strong>Cohere</strong></td>
             <td>20</td>
             <td>—</td>
             <td>1,000 req</td>
-          </tr>
-          <tr data-provider="Groq">
-            <td>Groq</td>
-            <td>30</td>
-            <td>15,000</td>
-            <td>14,400 req</td>
+            <td>command-r</td>
           </tr>
           <tr data-provider="Perplexity">
-            <td>Perplexity</td>
+            <td><strong>Perplexity</strong></td>
             <td>5</td>
             <td>—</td>
-            <td>—</td>
+            <td>Varies</td>
+            <td>sonar</td>
           </tr>
         </tbody>
       </table>
-      <div class="limits-table-footer">RPM = requests per minute · TPM = tokens per minute · Limits vary by plan</div>
+      <div class="limits-table-footer">RPM = Requests/Min · TPM = Tokens/Min · Google Gemini offers generous free tier keys directly from Google AI Studio.</div>
     </div>
   </div>
 
   <!-- Account page (placeholder) -->
   <div class="page page-settings" id="page-account">
     <h2>Account</h2>
+    <div class="setting-card">
+      <div class="setting-label">
+        Local Profile
+        <span>All API keys are securely stored locally on your device in browser localStorage</span>
+      </div>
+      <span class="active-badge">Guest Session</span>
+    </div>
   </div>
 
   <script src="script.js"></script>

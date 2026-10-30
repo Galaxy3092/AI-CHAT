@@ -1,12 +1,6 @@
 # MyApp — Project Documentation
 
-> Built by **Antigravity** (Claude Opus 4.6) for Galaxy on 29 Oct 2026.
-
----
-
-## Overview
-
-A static single-page web app with a matte black UI inspired by ChatGPT / Perplexity. It features a sidebar, a centered chat prompt, and a settings page — all built with vanilla HTML, CSS, and JS (no frameworks).
+> An AI assistant web application with ChatGPT / Perplexity-style interface, multi-provider API support, live connection status indicators, and rate limits tracking. Built with vanilla HTML, CSS, and JS (zero frameworks).
 
 ---
 
@@ -14,65 +8,47 @@ A static single-page web app with a matte black UI inspired by ChatGPT / Perplex
 
 ```
 website/
-├── index.html    ← Main HTML (all pages live here, swapped via JS)
-├── style.css     ← All styles (theme variables, sidebar, pages, toggle, API card)
-├── script.js     ← All logic (page nav, theme toggle, API key management)
-└── README.md     ← This file
+├── index.html    ← Main application HTML (SPA page structure)
+├── style.css     ← Modern theme tokens, ChatGPT/Perplexity layout, animations, badges
+├── script.js     ← SPA navigation, live API calls, connection test, status detection
+└── README.md     ← Documentation & usage guide
 ```
 
 ---
 
-## Features Built
+## Key Features
 
-### 1. Sidebar
-- Fixed left panel, dark (`#0a0a0a`)
-- **Chats** at the top with a chat bubble icon
-- **Settings** and **Account** at the bottom with gear and person icons
-- All items use inline SVGs (Feather/Lucide style)
-- Clicking any item swaps the main content area (SPA-style navigation)
+### 1. Chat Experience (ChatGPT & Perplexity Inspired)
+- **Top Header Bar**: Shows the currently active AI provider (e.g. `🟢 Google Gemini`) with connection status badge. Clicking it navigates straight to Settings to manage keys.
+- **New Chat Button**: Clears the conversation history and resets to the welcome screen.
+- **Welcome Screen**: Clean typography with quick-start suggestion chips (*"Explain quantum computing"*, *"Write a clean Python REST script"*, etc.).
+- **Message Bubbles**: Styled user and assistant message rows with avatars, role labels, model tags, and formatted Markdown rendering (code blocks, bold, italics, paragraphs).
+- **Typing Indicator**: Animated 3-dot bounce indicating active response generation.
+- **Auto-expanding Input**: Textarea grows dynamically with multiline input; <kbd>Enter</kbd> sends and <kbd>Shift</kbd>+<kbd>Enter</kbd> inserts a newline.
 
-### 2. Chat Page (default)
-- Centered prompt box with heading: *"What can I help you with?"*
-- Rounded input field with a white send button (arrow icon)
-- Matte black background (`#111`)
+### 2. Multi-Provider AI API Integration
+Direct browser-to-API calls with error handling:
+- **Google Gemini** (Recommended free tier): `gemini-1.5-flash` with full multi-turn conversation support.
+- **OpenRouter**: Unified access across free and premium models.
+- **Groq**: Ultra-fast Llama 3.1 8B inference.
+- **OpenAI**: GPT-3.5 Turbo.
+- **Anthropic**: Claude 3 Haiku with direct browser access header.
+- **Mistral**: Mistral Small.
+- **Cohere**: Command-R.
+- **Perplexity**: Sonar.
 
-### 3. Settings Page
-- **Appearance toggle** — Day/Night switch with:
-  - Moon icon (dark mode, knob left)
-  - Sun icon (light mode, knob right, yellow knob on sky-blue track)
-  - Smooth sliding animation
-  - Entire site theme changes (sidebar, background, inputs, text — everything)
-  - Theme preference saved to `localStorage`
+### 3. API Key & Connection Detection
+- **Live Connection Status Box**: Bold, animated status card with a pulsing green dot when connected or red dot when offline.
+- **One-Click Connection Test**: **"Test Connection"** button verifies your API key against the provider's official servers before you start chatting.
+- **Key Visibility Toggle**: Eye icon to inspect/hide pasted keys.
+- **Detected Keys Quick-Switcher**: Lists all providers that have keys saved on your browser; click any detected provider to set it as active immediately.
+- **Sidebar Status Indicator**: Mini status dot and provider name pinned to the bottom of the sidebar.
 
-- **AI API Key** — Connect any AI provider:
-  - Dropdown: OpenAI, Anthropic, Google Gemini, Mistral, Cohere, Groq, Perplexity
-  - Password input field (masked)
-  - Save button — stores key per provider in `localStorage`
-  - Switching providers loads any previously saved key
-  - Status message confirms save
+### 4. Rate Limits Reference
+Comprehensive rate limit reference table comparing RPM, TPM, and daily limits across all 8 providers (focusing on free tier offerings).
 
-### 4. Account Page
-- Placeholder — just a heading, ready to be built out
-
----
-
-## Theme System
-
-Uses CSS custom properties on `:root[data-theme="dark"]` and `:root[data-theme="light"]`. All colors reference `var(--*)` tokens, so adding new components automatically follows the theme.
-
-Key variables: `--bg`, `--sidebar-bg`, `--text`, `--text-muted`, `--input-bg`, `--input-border`, `--settings-card-bg`, etc.
-
----
-
-## Git History
-
-| Commit | Message |
-|--------|---------|
-| `8913af5` | Initial commit: static page with sidebar and prompt box |
-| `66350e2` | Add settings page with day/night toggle and page navigation |
-| `1170810` | Extract CSS/JS to separate files, add AI API key settings |
-| `8e76436` | Fix: use external CSS/JS files, add API key settings to settings page |
-| `2b66550` | Fix: restore script.js content |
+### 5. Theme System
+Clean CSS custom property system supporting instant Day/Night toggling with smooth transitions and persistent `localStorage` preference.
 
 ---
 
@@ -84,14 +60,3 @@ python3 -m http.server 8080
 ```
 
 Then open **http://localhost:8080** in your browser.
-
----
-
-## What's Next (ideas for the next agent)
-
-- Wire up the chat prompt to actually call the saved AI API key
-- Add chat message bubbles (user + AI responses)
-- Build out the Account page (profile, sign in/out)
-- Add more settings (model selection, temperature, system prompt)
-- Make it responsive for mobile
-- Deploy to GitHub Pages / Netlify / Vercel

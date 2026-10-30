@@ -276,6 +276,20 @@ body {
   cursor: pointer;
   outline: none;
   padding-right: 0.3rem;
+  max-width: 260px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.fetch-status-indicator {
+  font-size: 0.74rem;
+  color: #3b82f6;
+  font-weight: 500;
+}
+  cursor: pointer;
+  outline: none;
+  padding-right: 0.3rem;
   appearance: none;
   -webkit-appearance: none;
 }

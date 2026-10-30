@@ -1,6 +1,6 @@
 // ══════════════════════════════════════
-//  MyApp — AI Chat & Model Engine
-//  Zero Pre-Assumed Models & Optional Keys
+//  MyApp — AI Chat & Auto-Model Engine
+//  Zero Pre-Assumed Models & Auto-Fetching
 // ══════════════════════════════════════
 
 // ── DOM Elements ──
@@ -12,9 +12,8 @@ const themeToggle = document.getElementById('themeToggle');
 const apiProvider = document.getElementById('apiProvider');
 const customEndpointGroup = document.getElementById('customEndpointGroup');
 const customEndpointInput = document.getElementById('customEndpointInput');
-const modelInput = document.getElementById('modelInput');
 const settingsModelSelect = document.getElementById('settingsModelSelect');
-const btnFetchModels = document.getElementById('btnFetchModels');
+const fetchStatusText = document.getElementById('fetchStatusText');
 const apiKeyInput = document.getElementById('apiKeyInput');
 const apiSaveBtn = document.getElementById('apiSaveBtn');
 const apiTestBtn = document.getElementById('apiTestBtn');
@@ -41,7 +40,6 @@ const statKeyDetails = document.getElementById('statKeyDetails');
 
 // Chat Elements
 const chatHeaderDot = document.getElementById('chatHeaderDot');
-const chatModelInput = document.getElementById('chatModelInput');
 const chatModelSelect = document.getElementById('chatModelSelect');
 const btnManageKey = document.getElementById('btnManageKey');
 const chatNewBtn = document.getElementById('chatNewBtn');
@@ -57,13 +55,13 @@ const sidebarStatusText = document.getElementById('sidebarStatusText');
 
 
 // ══════════════════════════════════════
-//  Live Metrics State (Honest & Clean)
+//  Live Metrics State
 // ══════════════════════════════════════
 
 let liveMetrics = {
   lastLatencyMs: null,
   lastTokens: null,
-  details: 'No requests sent yet. Metrics will update in real time.'
+  details: 'No requests sent yet. Real-time metrics will appear here.'
 };
 
 
@@ -112,7 +110,7 @@ if (savedTheme) {
 
 
 // ══════════════════════════════════════
-//  Provider & Model State
+//  Provider & Model Storage
 // ══════════════════════════════════════
 
 function getCurrentProvider() {
@@ -122,6 +120,7 @@ function getCurrentProvider() {
 function setCurrentProvider(p) {
   localStorage.setItem('active_provider', p);
   updateUI();
+  autoFetchModels(p);
 }
 
 function getModelForProvider(p) {
@@ -145,7 +144,6 @@ function setKeyForProvider(p, k) {
   } else {
     localStorage.removeItem('apiKey_' + p);
   }
-  updateUI();
 }
 
 function getEndpointForProvider(p) {
@@ -163,6 +161,157 @@ function setEndpointForProvider(p, ep) {
 
 
 // ══════════════════════════════════════
+//  Auto-Fetch Models from API
+// ══════════════════════════════════════
+
+let fetchAbortController = null;
+
+async function autoFetchModels(provider) {
+  const key = getKeyForProvider(provider);
+  const endpoint = getEndpointForProvider(provider);
+
+  fetchStatusText.textContent = 'Auto-fetching models...';
+  fetchStatusText.style.color = '#3b82f6';
+
+  if (fetchAbortController) {
+    fetchAbortController.abort();
+  }
+  fetchAbortController = new AbortController();
+
+  try {
+    const models = await fetchModelsFromEndpoint(provider, key, endpoint, fetchAbortController.signal);
+
+    if (models && models.length > 0) {
+      localStorage.setItem('fetched_models_' + provider, JSON.stringify(models));
+      renderModelDropdowns(provider, models);
+
+      fetchStatusText.textContent = `✓ ${models.length} models fetched`;
+      fetchStatusText.style.color = '#22c55e';
+    } else {
+      renderModelDropdowns(provider, []);
+      fetchStatusText.textContent = key ? 'No models returned' : 'Enter key to fetch';
+      fetchStatusText.style.color = 'var(--text-muted)';
+    }
+  } catch (err) {
+    if (err.name === 'AbortError') return;
+    renderModelDropdowns(provider, []);
+    fetchStatusText.textContent = key ? 'Could not fetch models' : 'Key required to fetch';
+    fetchStatusText.style.color = 'var(--text-muted)';
+  }
+}
+
+async function fetchModelsFromEndpoint(provider, key, endpoint, signal) {
+  const headers = {};
+  if (key) headers['Authorization'] = 'Bearer ' + key;
+
+  // 1. Google Gemini
+  if (provider === 'Google Gemini') {
+    if (!key) return [];
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`, { signal });
+    if (!res.ok) throw new Error(`Google returned status ${res.status}`);
+    const data = await res.json();
+    return (data.models || [])
+      .filter(m => m.supportedGenerationMethods?.includes('generateContent'))
+      .map(m => m.name.replace('models/', ''));
+  }
+
+  // 2. OpenRouter (Public endpoint, works even with no key)
+  if (provider === 'OpenRouter') {
+    const res = await fetch('https://openrouter.ai/api/v1/models', { headers, signal });
+    if (!res.ok) throw new Error(`OpenRouter returned status ${res.status}`);
+    const data = await res.json();
+    return (data.data || []).slice(0, 40).map(m => m.id);
+  }
+
+  // 3. Local / Custom (Ollama, LM Studio)
+  if (provider === 'Custom / Local (Ollama, LM Studio)') {
+    const url = endpoint.replace('/chat/completions', '/models').replace('/v1/completions', '/v1/models');
+    const res = await fetch(url, { headers, signal });
+    if (!res.ok) throw new Error(`Local server status ${res.status}`);
+    const data = await res.json();
+    return (data.data || data.models || []).map(m => m.id || m.name || m);
+  }
+
+  // 4. Groq
+  if (provider === 'Groq') {
+    if (!key) return [];
+    const res = await fetch('https://api.groq.com/openai/v1/models', { headers, signal });
+    if (!res.ok) throw new Error(`Groq status ${res.status}`);
+    const data = await res.json();
+    return (data.data || []).map(m => m.id);
+  }
+
+  // 5. OpenAI
+  if (provider === 'OpenAI') {
+    if (!key) return [];
+    const res = await fetch('https://api.openai.com/v1/models', { headers, signal });
+    if (!res.ok) throw new Error(`OpenAI status ${res.status}`);
+    const data = await res.json();
+    return (data.data || []).filter(m => m.id.includes('gpt')).map(m => m.id);
+  }
+
+  // 6. Mistral
+  if (provider === 'Mistral') {
+    if (!key) return [];
+    const res = await fetch('https://api.mistral.ai/v1/models', { headers, signal });
+    if (!res.ok) throw new Error(`Mistral status ${res.status}`);
+    const data = await res.json();
+    return (data.data || []).map(m => m.id);
+  }
+
+  return [];
+}
+
+function renderModelDropdowns(provider, modelsList) {
+  let savedModel = getModelForProvider(provider);
+
+  // If models were fetched and none selected yet, auto-select the first model!
+  if (!savedModel && modelsList.length > 0) {
+    savedModel = modelsList[0];
+    localStorage.setItem('model_' + provider, savedModel);
+  }
+
+  // 1. Settings Dropdown
+  settingsModelSelect.innerHTML = '';
+  if (modelsList.length === 0) {
+    const opt = document.createElement('option');
+    opt.value = '';
+    opt.textContent = getKeyForProvider(provider)
+      ? '(No models found for this endpoint)'
+      : '(Add API key / URL to auto-fetch models)';
+    settingsModelSelect.appendChild(opt);
+  } else {
+    modelsList.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m;
+      opt.textContent = m;
+      if (m === savedModel) opt.selected = true;
+      settingsModelSelect.appendChild(opt);
+    });
+  }
+
+  // 2. Chat Header Dropdown
+  chatModelSelect.innerHTML = '';
+  if (modelsList.length === 0) {
+    const opt = document.createElement('option');
+    opt.value = '';
+    opt.textContent = `${provider}: No models loaded`;
+    chatModelSelect.appendChild(opt);
+  } else {
+    modelsList.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m;
+      opt.textContent = `${provider.replace('Google ', '')}: ${m}`;
+      if (m === savedModel) opt.selected = true;
+      chatModelSelect.appendChild(opt);
+    });
+  }
+
+  updateUI();
+}
+
+
+// ══════════════════════════════════════
 //  UI Synchronization & Indicators
 // ══════════════════════════════════════
 
@@ -172,22 +321,16 @@ function updateUI() {
   const key = getKeyForProvider(provider);
   const isCustom = provider === 'Custom / Local (Ollama, LM Studio)';
 
-  // 1. Settings inputs
+  // Settings inputs
   apiProvider.value = provider;
-  modelInput.value = model;
   apiKeyInput.value = key;
-
   customEndpointGroup.style.display = isCustom ? 'block' : 'none';
   if (isCustom) {
     customEndpointInput.value = getEndpointForProvider(provider);
   }
 
-  // 2. Chat header inputs
-  chatModelInput.value = model;
-  chatModelInput.placeholder = model ? model : 'Type model name (e.g. any model)...';
-
-  // 3. Status dots & text
-  const isReady = !!model; // Ready if a model is specified (key is optional)
+  // Header and Sidebar indicators
+  const isReady = !!model;
   if (isReady) {
     chatHeaderDot.className = 'pulse-dot online';
     sidebarDot.className = 'status-indicator-dot active';
@@ -197,111 +340,82 @@ function updateUI() {
     chatHeaderDot.className = 'pulse-dot';
     sidebarDot.className = 'status-indicator-dot';
     sidebarStatusText.textContent = 'No Model Set';
-    chatInput.placeholder = 'Type your model name above or in Settings to start chatting...';
+    chatInput.placeholder = 'Select a model in the header or Settings to start chatting...';
   }
 
-  // 4. Settings Badge & Connection Box
-  activeProviderBadge.textContent = model ? `${provider}: ${model}` : `${provider} (No model set)`;
+  // Settings Badge & Status Box
+  activeProviderBadge.textContent = model ? `${provider}: ${model}` : `${provider}`;
 
   if (model) {
     connectionBox.classList.add('connected');
-    connectionTitle.textContent = `Model Ready: ${model}`;
+    connectionTitle.textContent = `Model: ${model}`;
     connectionDesc.textContent = key
-      ? `Provider: ${provider} • API Key saved • Ready to chat.`
-      : `Provider: ${provider} • Keyless / Local Mode • Ready to chat.`;
+      ? `Provider: ${provider} • Key verified • Ready to chat.`
+      : `Provider: ${provider} • Local/Keyless mode • Ready to chat.`;
     connectionBadge.textContent = 'READY';
   } else {
     connectionBox.classList.remove('connected');
-    connectionTitle.textContent = 'Model Not Specified';
-    connectionDesc.textContent = 'Type the model name you want to use above. No default models are assumed.';
+    connectionTitle.textContent = 'Waiting for Models...';
+    connectionDesc.textContent = key
+      ? 'Auto-fetching models list from provider...'
+      : 'Enter your API key or local endpoint URL to auto-fetch models.';
     connectionBadge.textContent = 'STANDBY';
   }
 
-  // 5. Live Metrics Card
+  // Live Metrics Card
   statActiveModel.textContent = model || 'None';
   statProvider.textContent = provider;
   statLatency.textContent = liveMetrics.lastLatencyMs !== null ? `${liveMetrics.lastLatencyMs} ms` : '—';
   statTokens.textContent = liveMetrics.lastTokens !== null ? `${liveMetrics.lastTokens} tokens` : '—';
   statKeyDetails.textContent = liveMetrics.details;
-
-  // 6. Update fetched models dropdowns
-  updateModelDropdowns(provider);
-}
-
-function updateModelDropdowns(provider) {
-  const raw = localStorage.getItem('fetched_models_' + provider);
-  let list = [];
-  if (raw) {
-    try { list = JSON.parse(raw); } catch (e) {}
-  }
-
-  if (list && list.length > 0) {
-    settingsModelSelect.style.display = 'block';
-    chatModelSelect.style.display = 'inline-block';
-
-    settingsModelSelect.innerHTML = '<option value="">-- Choose from fetched models --</option>';
-    chatModelSelect.innerHTML = '<option value="">-- Switch model --</option>';
-
-    list.forEach(m => {
-      const opt1 = document.createElement('option');
-      opt1.value = m;
-      opt1.textContent = m;
-      settingsModelSelect.appendChild(opt1);
-
-      const opt2 = document.createElement('option');
-      opt2.value = m;
-      opt2.textContent = m;
-      chatModelSelect.appendChild(opt2);
-    });
-  } else {
-    settingsModelSelect.style.display = 'none';
-    chatModelSelect.style.display = 'none';
-  }
 }
 
 
 // ══════════════════════════════════════
-//  Event Handlers for Inputs & Model Sync
+//  Event Handlers
 // ══════════════════════════════════════
 
-// Model input in Settings
-modelInput.addEventListener('input', () => {
-  const p = getCurrentProvider();
-  setModelForProvider(p, modelInput.value);
-});
-
-// Model input in Chat Header
-chatModelInput.addEventListener('input', () => {
-  const p = getCurrentProvider();
-  setModelForProvider(p, chatModelInput.value);
-});
-
-// Dropdowns when a fetched model is chosen
+// Model changed in Settings dropdown
 settingsModelSelect.addEventListener('change', () => {
   if (settingsModelSelect.value) {
     const p = getCurrentProvider();
     setModelForProvider(p, settingsModelSelect.value);
+    chatModelSelect.value = settingsModelSelect.value;
   }
 });
 
+// Model changed in Chat Header dropdown
 chatModelSelect.addEventListener('change', () => {
   if (chatModelSelect.value) {
     const p = getCurrentProvider();
     setModelForProvider(p, chatModelSelect.value);
+    settingsModelSelect.value = chatModelSelect.value;
   }
 });
 
-// Provider selection dropdown change
+// Provider dropdown changed
 apiProvider.addEventListener('change', () => {
   setCurrentProvider(apiProvider.value);
 });
 
+// Custom endpoint changed
 customEndpointInput.addEventListener('input', () => {
   const p = getCurrentProvider();
   setEndpointForProvider(p, customEndpointInput.value);
 });
 
-// Key toggle visibility
+// Auto-fetch when API key is entered/pasted (debounced)
+let keyDebounceTimer = null;
+apiKeyInput.addEventListener('input', () => {
+  clearTimeout(keyDebounceTimer);
+  keyDebounceTimer = setTimeout(() => {
+    const p = getCurrentProvider();
+    setKeyForProvider(p, apiKeyInput.value);
+    autoFetchModels(p);
+  }, 600);
+});
+
+// Toggle password visibility
 btnToggleVisibility.addEventListener('click', () => {
   if (apiKeyInput.type === 'password') {
     apiKeyInput.type = 'text';
@@ -322,156 +436,77 @@ btnToggleVisibility.addEventListener('click', () => {
 apiSaveBtn.addEventListener('click', () => {
   const p = apiProvider.value;
   setCurrentProvider(p);
-  setModelForProvider(p, modelInput.value);
   setKeyForProvider(p, apiKeyInput.value);
   if (p === 'Custom / Local (Ollama, LM Studio)') {
     setEndpointForProvider(p, customEndpointInput.value);
   }
+  autoFetchModels(p);
 
-  apiStatus.textContent = `✓ Settings saved for ${p}. Model: ${modelInput.value || '(none)'}`;
+  apiStatus.textContent = `✓ Settings saved. Auto-fetching models for ${p}...`;
   apiStatus.className = 'api-key-status success';
 });
 
-// Clear Button for current provider
+// Clear settings for current provider
 apiDeleteBtn.addEventListener('click', () => {
   const p = getCurrentProvider();
-  modelInput.value = '';
   apiKeyInput.value = '';
   localStorage.removeItem('model_' + p);
   localStorage.removeItem('apiKey_' + p);
   localStorage.removeItem('fetched_models_' + p);
   apiStatus.textContent = `Cleared settings for ${p}.`;
   apiStatus.className = 'api-key-status info';
-  updateUI();
+  autoFetchModels(p);
 });
 
-// Reset All Button
+// Reset All configurations
 apiClearAllBtn.addEventListener('click', () => {
-  if (!confirm('Clear all stored models and keys?')) return;
+  if (!confirm('Clear all stored models and configurations?')) return;
   localStorage.clear();
   liveMetrics = {
     lastLatencyMs: null,
     lastTokens: null,
-    details: 'All settings reset. Ready for your model.'
+    details: 'All settings reset. Ready to auto-fetch.'
   };
-  apiStatus.textContent = '✓ All stored configurations cleared.';
+  apiStatus.textContent = '✓ All configurations wiped.';
   apiStatus.className = 'api-key-status info';
   updateUI();
+  autoFetchModels(getCurrentProvider());
 });
 
-
-// ══════════════════════════════════════
-//  Fetch Models from Server/API (Empty by default)
-// ══════════════════════════════════════
-
-btnFetchModels.addEventListener('click', async () => {
-  const p = getCurrentProvider();
-  const key = apiKeyInput.value.trim() || getKeyForProvider(p);
-  const customUrl = customEndpointInput.value.trim() || getEndpointForProvider(p);
-
-  btnFetchModels.querySelector('span').textContent = 'Fetching...';
-  apiStatus.textContent = `Querying ${p} endpoint for models...`;
-  apiStatus.className = 'api-key-status info';
-
-  try {
-    const list = await fetchModelsDirect(p, key, customUrl);
-    if (list && list.length > 0) {
-      localStorage.setItem('fetched_models_' + p, JSON.stringify(list));
-      updateModelDropdowns(p);
-      apiStatus.textContent = `✓ Retrieved ${list.length} models from ${p}. Select one from the dropdown or type your own.`;
-      apiStatus.className = 'api-key-status success';
-      liveMetrics.details = `Fetched ${list.length} live models from ${p}.`;
-      updateUI();
-    } else {
-      apiStatus.textContent = `No models returned by ${p}. You can type any model name directly.`;
-      apiStatus.className = 'api-key-status info';
-    }
-  } catch (err) {
-    apiStatus.textContent = `Could not fetch models: ${err.message}. You can still type your model name directly.`;
-    apiStatus.className = 'api-key-status error';
-  } finally {
-    btnFetchModels.querySelector('span').textContent = 'Fetch Models from API';
-  }
-});
-
-async function fetchModelsDirect(provider, key, customUrl) {
-  const headers = {};
-  if (key) headers['Authorization'] = 'Bearer ' + key;
-
-  if (provider === 'Google Gemini') {
-    if (!key) throw new Error('API key is required to query Google Gemini models list');
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
-    if (!res.ok) throw new Error(`Google returned status ${res.status}`);
-    const data = await res.json();
-    return (data.models || [])
-      .filter(m => m.supportedGenerationMethods?.includes('generateContent'))
-      .map(m => m.name.replace('models/', ''));
-  }
-
-  if (provider === 'OpenRouter') {
-    const res = await fetch('https://openrouter.ai/api/v1/models', { headers });
-    if (!res.ok) throw new Error(`Status ${res.status}`);
-    const data = await res.json();
-    return (data.data || []).map(m => m.id);
-  }
-
-  if (provider === 'Groq') {
-    const res = await fetch('https://api.groq.com/openai/v1/models', { headers });
-    if (!res.ok) throw new Error(`Status ${res.status}`);
-    const data = await res.json();
-    return (data.data || []).map(m => m.id);
-  }
-
-  if (provider === 'OpenAI') {
-    const res = await fetch('https://api.openai.com/v1/models', { headers });
-    if (!res.ok) throw new Error(`Status ${res.status}`);
-    const data = await res.json();
-    return (data.data || []).map(m => m.id);
-  }
-
-  if (provider === 'Custom / Local (Ollama, LM Studio)') {
-    const url = customUrl.replace('/chat/completions', '/models').replace('/v1/completions', '/v1/models');
-    const res = await fetch(url, { headers });
-    if (!res.ok) throw new Error(`Local endpoint returned status ${res.status}`);
-    const data = await res.json();
-    return (data.data || data.models || []).map(m => m.id || m.name || m);
-  }
-
-  return [];
-}
-
-// Test Connection
+// Refresh & Test Button
 apiTestBtn.addEventListener('click', async () => {
   const p = getCurrentProvider();
-  const m = modelInput.value.trim() || getModelForProvider(p);
+  const m = getModelForProvider(p);
   const key = apiKeyInput.value.trim() || getKeyForProvider(p);
 
-  if (!m) {
-    apiStatus.textContent = 'Please type a model name first to test.';
+  apiStatus.textContent = `Testing connection to ${p}...`;
+  apiStatus.className = 'api-key-status info';
+
+  // Trigger model fetch
+  await autoFetchModels(p);
+
+  const activeModel = getModelForProvider(p) || m;
+  if (!activeModel) {
+    apiStatus.textContent = 'Could not detect an active model. Please ensure the endpoint is running.';
     apiStatus.className = 'api-key-status error';
     return;
   }
 
-  apiStatus.textContent = `Testing request to ${p} (${m})...`;
-  apiStatus.className = 'api-key-status info';
-
   const t0 = performance.now();
   try {
-    const res = await executeModelCall(p, m, key, [{ role: 'user', content: 'hi' }]);
+    const res = await executeModelCall(p, activeModel, key, [{ role: 'user', content: 'hi' }]);
     const latency = Math.round(performance.now() - t0);
 
-    apiStatus.textContent = `✓ Response received in ${latency}ms from ${m}!`;
+    apiStatus.textContent = `✓ Connected! ${activeModel} responded in ${latency}ms.`;
     apiStatus.className = 'api-key-status success';
 
     liveMetrics.lastLatencyMs = latency;
     liveMetrics.lastTokens = res.tokens;
-    liveMetrics.details = `Tested successfully with ${m} in ${latency}ms.`;
+    liveMetrics.details = `Verified with ${activeModel} in ${latency}ms.`;
     updateUI();
   } catch (err) {
-    apiStatus.textContent = `✗ Error: ${err.message}`;
+    apiStatus.textContent = `✗ Connection failed: ${err.message}`;
     apiStatus.className = 'api-key-status error';
-    liveMetrics.details = `Test failed: ${err.message}`;
-    updateUI();
   }
 });
 
@@ -526,8 +561,7 @@ function sendMessage() {
   const m = getModelForProvider(p);
 
   if (!m) {
-    alert('Please enter or type the model name you want to use in the header above or in Settings.');
-    chatModelInput.focus();
+    alert('Please select or wait for a model to load in the header above or in Settings.');
     return;
   }
 
@@ -554,7 +588,7 @@ async function runChatQuery(provider, model) {
 
     liveMetrics.lastLatencyMs = latency;
     liveMetrics.lastTokens = result.tokens;
-    liveMetrics.details = `Last response: ${latency}ms from model ${model}.`;
+    liveMetrics.details = `Last response: ${latency}ms from ${model}.`;
     updateUI();
 
     typingEl.remove();
@@ -565,18 +599,18 @@ async function runChatQuery(provider, model) {
     typingEl.remove();
     appendMessage(
       'ai',
-      `❌ **Error from ${model}:**\n\n${err.message}\n\n*Check your model name, endpoint, or optional key in [Settings].*`,
+      `❌ **Error from ${model}:**\n\n${err.message}\n\n*Check your endpoint or API key in [Settings].*`,
       provider,
       model
     );
   }
 }
 
-// ── Generic Model Call Execution (Adapts to any model user brings) ──
+// ── Model Call Execution ──
 async function executeModelCall(provider, model, key, history) {
-  // 1. Google Gemini format
+  // 1. Google Gemini
   if (provider === 'Google Gemini') {
-    if (!key) throw new Error('Google Gemini requires an API key. Please add it in Settings.');
+    if (!key) throw new Error('Google Gemini requires an API key in Settings.');
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
     const payload = {
       contents: history.map(m => ({
@@ -599,9 +633,9 @@ async function executeModelCall(provider, model, key, history) {
     return { reply, tokens: data.usageMetadata?.totalTokenCount || null };
   }
 
-  // 2. Anthropic format
+  // 2. Anthropic
   if (provider === 'Anthropic') {
-    if (!key) throw new Error('Anthropic requires an API key.');
+    if (!key) throw new Error('Anthropic requires an API key in Settings.');
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -627,7 +661,7 @@ async function executeModelCall(provider, model, key, history) {
     };
   }
 
-  // 3. OpenAI-Compatible Format (OpenAI, OpenRouter, Groq, Mistral, Perplexity, Local / Ollama)
+  // 3. OpenAI-Compatible (OpenAI, OpenRouter, Groq, Mistral, Perplexity, Cohere, Local/Ollama)
   let endpoint = 'https://api.openai.com/v1/chat/completions';
   if (provider === 'OpenRouter') endpoint = 'https://openrouter.ai/api/v1/chat/completions';
   if (provider === 'Groq') endpoint = 'https://api.groq.com/openai/v1/chat/completions';
@@ -647,12 +681,10 @@ async function executeModelCall(provider, model, key, history) {
     headers['X-Title'] = 'MyApp';
   }
 
-  const bodyPayload = { model: model, messages: history };
-
   const res = await fetch(endpoint, {
     method: 'POST',
     headers: headers,
-    body: JSON.stringify(bodyPayload)
+    body: JSON.stringify({ model: model, messages: history })
   });
 
   if (!res.ok) {
@@ -668,7 +700,7 @@ async function executeModelCall(provider, model, key, history) {
 
 
 // ══════════════════════════════════════
-//  Message Rendering & Helpers
+//  Message Rendering Helpers
 // ══════════════════════════════════════
 
 function showTypingIndicator(providerName, modelName) {
@@ -745,7 +777,22 @@ function escapeHTML(str) {
 
 
 // ══════════════════════════════════════
-//  Initial Load (Empty by default)
+//  Initial Load & Auto-Fetch Trigger
 // ══════════════════════════════════════
 
+const initProvider = getCurrentProvider();
 updateUI();
+
+// Check if cached models exist, otherwise auto-fetch immediately
+const cached = localStorage.getItem('fetched_models_' + initProvider);
+if (cached) {
+  try {
+    const list = JSON.parse(cached);
+    if (Array.isArray(list) && list.length > 0) {
+      renderModelDropdowns(initProvider, list);
+    }
+  } catch (e) {}
+}
+
+// Automatically fetch live models in the background
+autoFetchModels(initProvider);

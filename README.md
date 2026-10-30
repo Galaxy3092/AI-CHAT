@@ -1,6 +1,6 @@
 # MyApp — AI Chat Engine
 
-> A lightweight, static AI chat web application with zero pre-assumed models, optional API keys, and real-time response metrics. Built with vanilla HTML, CSS, and JS (zero frameworks).
+> A lightweight, static AI chat web application with automatic live model fetching, optional API keys, and real-time response metrics. Built with vanilla HTML, CSS, and JS (zero frameworks).
 
 ---
 
@@ -10,36 +10,37 @@
 website/
 ├── index.html    ← Main application HTML (SPA structure)
 ├── style.css     ← Modern theme tokens, ChatGPT/Perplexity layout, dark/light modes
-├── script.js     ← Multi-provider router, zero-assumption model engine, live metrics
+├── script.js     ← Auto-fetching model engine, multi-provider router, live metrics
 └── README.md     ← Documentation & usage guide
 ```
 
 ---
 
-## Design Principles
+## Key Features
 
-### 1. Bring Your Own Model (Empty by Default)
-- **No Hardcoded Models**: The application does not assume or hardcode any default models. You can bring any model you want.
-- **Type Any Model Directly**: Enter your model identifier directly in the Chat header input or in Settings (e.g. `llama3`, `gemini-1.5-flash`, `gpt-4o`, `deepseek-r1`, or custom fine-tunes).
-- **Fetch Live Models (Optional)**: If you connect an API key or local endpoint, clicking **"Fetch Models from API"** asks the server directly for the live model list permitted on your account.
+### 1. Automatic Live Model Fetching (No Manual Typing)
+- **Zero Manual Entry**: The application automatically connects to the selected provider/server endpoint in the background, fetches the live list of models, and populates the dropdowns for you.
+- **Auto-Selection**: The first available model is selected automatically, ready for immediate chatting.
+- **In Chat Header**: Model selector dropdown pinned at the top of the chat area allows instant model switching.
+- **Dynamic Background Updates**: Automatically re-fetches when you change providers or paste an API key.
 
-### 2. API Keys are 100% Optional
-- **Keyless / Local Mode**: Works without an API key for local inference servers like **Ollama** (`http://localhost:11434/v1`), **LM Studio** (`http://localhost:1234/v1`), LocalAI, or open proxies.
+### 2. Optional API Keys & Local Models
+- **Keyless / Local Mode**: Fully supports local inference servers like **Ollama** (`http://localhost:11434/v1`), **LM Studio** (`http://localhost:1234/v1`), LocalAI, or open proxies without needing an API key.
 - **Hosted Cloud Providers**: Supports **Google Gemini**, **OpenRouter**, **Groq**, **OpenAI**, **Anthropic**, **Mistral**, **Cohere**, and **Perplexity** whenever you provide a key.
 
-### 3. Zero Pre-Assumed Stats
-- **No Fake Rate Tables**: Removed all static/pre-assumed RPM, TPM, and quota tables.
-- **Live Response Metrics**:
-  - Round-trip latency in milliseconds (<kbd>ms</kbd>).
-  - Tokens returned directly from actual API response payloads.
-  - Live server connection confirmation.
+### 3. Zero Pre-Assumptions & Honest Live Metrics
+- **No Fake Numbers**: Removed all static rate tables and pre-assumed RPM/TPM numbers.
+- **Real-Time Response Metrics**:
+  - Live round-trip response time in milliseconds (<kbd>ms</kbd>).
+  - Actual tokens returned from response payloads.
+  - Active model and service name.
 
-### 4. Chat Interface
-- **Top Header Bar**: Type or switch your model directly at the top of the chat.
-- **Welcome Screen**: Clean interface with quick prompt ideas.
+### 4. ChatGPT / Perplexity Style Chat
+- **Top Header Bar**: Shows active model with live status indicator.
+- **Welcome Screen**: Clean layout with quick prompt chips.
 - **"New Chat" Button**: Clears the conversation history and resets the view.
-- **Markdown & Code Rendering**: Message bubbles with formatted code blocks, bold, italics, and avatars.
-- **Auto-expanding Input**: Textarea grows dynamically with multiline input; <kbd>Enter</kbd> sends and <kbd>Shift</kbd>+<kbd>Enter</kbd> inserts a newline.
+- **Markdown & Code Rendering**: User and AI message bubbles with formatted code blocks, bold, italics, and avatars.
+- **Auto-expanding Textarea**: Grows dynamically with multiline input; <kbd>Enter</kbd> sends and <kbd>Shift</kbd>+<kbd>Enter</kbd> inserts a newline.
 
 ---
 

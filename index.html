@@ -28,7 +28,7 @@
       <!-- Mini status in sidebar footer -->
       <div class="sidebar-status" id="sidebarStatus" title="Active Model">
         <span class="status-indicator-dot" id="sidebarDot"></span>
-        <span class="sidebar-status-text" id="sidebarStatusText">No Model Set</span>
+        <span class="sidebar-status-text" id="sidebarStatusText">Loading model...</span>
       </div>
 
       <nav>
@@ -47,16 +47,14 @@
   <!-- Chat Page -->
   <main class="page page-chat active" id="page-chat">
 
-    <!-- Chat Header Top Bar with Flexible Model Input & Selector -->
+    <!-- Chat Header Top Bar with Auto-Fetched Model Selector -->
     <header class="chat-header">
       <div class="chat-header-left">
         <div class="chat-model-selector-wrapper">
           <span class="pulse-dot" id="chatHeaderDot"></span>
-          <!-- Dynamic Model Input: user can type any model name directly -->
-          <input type="text" id="chatModelInput" class="chat-model-input" placeholder="Type any model name..." title="Type the model name you want to use" autocomplete="off" />
-          <!-- Dropdown only appears if user fetches models from an API -->
-          <select id="chatModelSelect" class="chat-model-select" style="display: none;" title="Select from fetched models">
-            <option value="">(No models fetched)</option>
+          <!-- Auto-fetched Model Select Dropdown -->
+          <select id="chatModelSelect" class="chat-model-select" title="Auto-fetched AI Models">
+            <option value="">Auto-fetching models...</option>
           </select>
           <button type="button" class="btn-model-manage" id="btnManageKey" title="Configure endpoints and keys in Settings">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
@@ -88,7 +86,7 @@
         </svg>
       </div>
       <h1 id="welcomeTitle">What can I help you with?</h1>
-      <p class="welcome-sub" id="welcomeSub">Type any model name above or configure your provider in Settings.</p>
+      <p class="welcome-sub" id="welcomeSub">Models are auto-fetched live from your provider API.</p>
 
       <!-- Suggestion chips -->
       <div class="chat-suggestions">
@@ -123,7 +121,7 @@
         </button>
       </div>
       <div class="chat-input-footer" id="chatInputFooter">
-        Direct connection to your selected model. Zero pre-configured models or keys.
+        Direct connection to your selected model. Auto-fetched in real-time.
       </div>
     </div>
   </main>
@@ -146,14 +144,14 @@
       </button>
     </div>
 
-    <!-- Provider & Model Configuration (Clean, No Pre-Assumed Models or Keys) -->
+    <!-- Provider & Model Configuration (Auto-Fetched Models) -->
     <div class="api-key-card">
       <div class="card-header">
         <div class="card-header-title">
-          <span>AI Provider & Custom Model</span>
-          <span class="active-badge" id="activeProviderBadge">Bring Your Own Model</span>
+          <span>AI Provider & Auto-Fetched Models</span>
+          <span class="active-badge" id="activeProviderBadge">Auto-Fetching Models</span>
         </div>
-        <span>Select your provider, specify your model name, and optionally add an API key</span>
+        <span>Select your provider, and models will be automatically fetched live</span>
       </div>
 
       <div class="api-key-form">
@@ -177,24 +175,14 @@
           <input type="text" id="customEndpointInput" placeholder="http://localhost:11434/v1/chat/completions" />
         </div>
 
-        <!-- Model Name (Empty by default — user brings whatever model they want) -->
+        <!-- Auto-Fetched Model Selection Dropdown -->
         <div class="model-selection-group">
           <div class="model-selection-header">
-            <label class="form-label" for="modelInput">Model Name:</label>
-            <button type="button" class="btn-fetch-models" id="btnFetchModels" title="Query the API server for available models">
-              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
-              </svg>
-              <span>Fetch Models from API</span>
-            </button>
+            <label class="form-label" for="settingsModelSelect">Model (Auto-Fetched):</label>
+            <span class="fetch-status-indicator" id="fetchStatusText">Checking models...</span>
           </div>
-
-          <!-- Direct Input: User types whatever model they bring -->
-          <input type="text" id="modelInput" placeholder="Type model name (e.g. gemini-1.5-flash, llama3, gpt-4o, etc.)..." />
-
-          <!-- Fetched models list (empty by default) -->
-          <select id="settingsModelSelect" style="display: none;">
-            <option value="">(No models fetched)</option>
+          <select id="settingsModelSelect">
+            <option value="">Auto-fetching available models...</option>
           </select>
         </div>
 
@@ -214,12 +202,12 @@
 
         <!-- Buttons Row -->
         <div class="btn-actions-row">
-          <button type="button" class="btn-save" id="apiSaveBtn">Save Configuration</button>
-          <button type="button" class="btn-test" id="apiTestBtn" title="Test connection with current model & key">
+          <button type="button" class="btn-save" id="apiSaveBtn">Save Settings</button>
+          <button type="button" class="btn-test" id="apiTestBtn" title="Test connection and re-fetch models">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-              <polygon points="5 3 19 12 5 21 5 3"/>
+              <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
             </svg>
-            Test Connection
+            Refresh & Test
           </button>
           <button type="button" class="btn-delete" id="apiDeleteBtn" title="Clear settings for this provider">Clear</button>
           <button type="button" class="btn-clear-all" id="apiClearAllBtn" title="Reset all settings and models">Reset All</button>
@@ -234,8 +222,8 @@
       <div class="connection-box-left">
         <div class="connection-dot" id="connectionDot"></div>
         <div class="connection-info">
-          <div class="connection-title" id="connectionTitle">Status: Not Configured</div>
-          <div class="connection-desc" id="connectionDesc">Enter your model name above and optionally add a key if required.</div>
+          <div class="connection-title" id="connectionTitle">Auto-Configuring...</div>
+          <div class="connection-desc" id="connectionDesc">Connecting to endpoint and loading live model list.</div>
         </div>
       </div>
       <div class="connection-badge" id="connectionBadge">Standby</div>

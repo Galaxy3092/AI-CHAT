@@ -88,6 +88,7 @@
       </div>
       <div class="api-key-form">
         <select id="apiProvider">
+          <option value="OpenRouter">OpenRouter</option>
           <option value="OpenAI">OpenAI</option>
           <option value="Anthropic">Anthropic</option>
           <option value="Google Gemini">Google Gemini</option>
@@ -102,6 +103,18 @@
         </div>
         <div class="api-key-status" id="apiStatus"></div>
       </div>
+    </div>
+
+    <!-- Connection status box -->
+    <div class="connection-box" id="connectionBox">
+      <div class="connection-box-left">
+        <div class="connection-dot" id="connectionDot"></div>
+        <div class="connection-info">
+          <div class="connection-title" id="connectionTitle">Not connected</div>
+          <div class="connection-desc" id="connectionDesc">No API key saved for this provider</div>
+        </div>
+      </div>
+      <div class="connection-badge" id="connectionBadge">Offline</div>
     </div>
 
     <!-- API limits info bar -->
@@ -121,7 +134,7 @@
     </div>
 
     <!-- Provider limits reference -->
-    <div class="limits-table-card" id="limitsTableCard">
+    <div class="limits-table-card">
       <div class="limits-table-header">Rate limits by provider <span>(free tier)</span></div>
       <table class="limits-table">
         <thead>
@@ -133,6 +146,12 @@
           </tr>
         </thead>
         <tbody>
+          <tr data-provider="OpenRouter">
+            <td>OpenRouter</td>
+            <td>20</td>
+            <td>Varies</td>
+            <td>200 req</td>
+          </tr>
           <tr data-provider="OpenAI">
             <td>OpenAI</td>
             <td>3</td>

@@ -1,0 +1,14 @@
+# Logs & cache
+*.log
+.cache/
+
+# Environment and sensitive keys
+.env
+.env.*
+*.local
+
+# System & Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

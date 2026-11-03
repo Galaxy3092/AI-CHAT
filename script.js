@@ -1,5 +1,5 @@
 // ══════════════════════════════════════
-//  MyApp — AI Chat & Auto-Model Engine
+//  TextBot — AI Chat & Auto-Model Engine
 //  Zero Pre-Assumed Models & Auto-Fetching
 // ══════════════════════════════════════
 
@@ -679,7 +679,7 @@ function loadChatSession(sessionId) {
       appendMessage(
         msg.role === 'user' ? 'user' : 'ai',
         msg.content,
-        msg.provider || 'MyApp',
+        msg.provider || 'TextBot',
         msg.model || ''
       );
     });
@@ -944,7 +944,7 @@ async function executeModelCall(provider, model, key, history) {
   }
   if (provider === 'OpenRouter') {
     headers['HTTP-Referer'] = window.location.href;
-    headers['X-Title'] = 'MyApp';
+    headers['X-Title'] = 'TextBot';
   }
 
   const res = await fetch(endpoint, {
@@ -1039,7 +1039,7 @@ function showTypingIndicator(providerName, modelName) {
   return typingMsg;
 }
 
-function appendMessage(role, content, providerName = 'MyApp', modelName = '') {
+function appendMessage(role, content, providerName = 'TextBot', modelName = '') {
   const msg = document.createElement('div');
   msg.className = 'message ' + role;
 

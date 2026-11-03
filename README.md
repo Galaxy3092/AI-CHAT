@@ -1,4 +1,4 @@
-# MyApp — AI Chat Engine
+# TextBot — AI Chat Engine
 
 > A lightweight, static AI chat web application with automatic live model fetching, optional API keys, and real-time response metrics. Built with vanilla HTML, CSS, and JS (zero frameworks).
 
@@ -7,7 +7,7 @@
 ## File Structure
 
 ```
-website/
+textbot/
 ├── index.html    ← Main application HTML (SPA structure)
 ├── style.css     ← Modern theme tokens, ChatGPT/Perplexity layout, dark/light modes
 ├── script.js     ← Auto-fetching model engine, multi-provider router, live metrics
@@ -49,7 +49,7 @@ website/
 ## How to Run
 
 ```bash
-cd "AI CHAT"
+cd textbot
 python3 -m http.server 8080
 ```
 
